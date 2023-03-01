@@ -1,0 +1,14 @@
+---
+version: "3"
+services:
+  ift630-scam:
+    container_name: ift630-scam
+    build: .
+    image: ift630-scam
+
+  test:
+    container_name: test
+    image: ift630-scam
+    command: ["go", "test", "-v", "./test"]
+    depends_on:
+      - ift630-scam
