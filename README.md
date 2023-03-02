@@ -27,9 +27,19 @@ docker compose run ift630-scam
 
 ## CI
 
+### Tests
+
 Tous les tests doivent être ajoutés dans le dossier `test/` et suivre
 la [convention Go](https://pkg.go.dev/testing).
 
-On a un petit pipeline de CI qui va rouler sur toutes la branche `main`.
-
 De plus, toutes les PR doivent passer les tests avant de merge.
+
+### Rapport
+
+L'écriture du rapport est dans le dossier `docs/`. Afin de rendre la mise en page
+plus facile, on peut directement écrire dans le fichier `rapport.md`.
+
+Lors du CI, un runner va automatiquement mettre à jour la table des matières
+et générer un `rapport.pdf` à jour. Vous avez seulement à écrire votre texte
+et créer les entêtes au besoin pour ajouter une nouvelle entrée dans la table
+des matières. L'édition des liens se fera de façon automatique.
