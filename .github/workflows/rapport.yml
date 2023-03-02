@@ -1,0 +1,28 @@
+---
+name: Rapport de projet
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  generate-rapport:
+    runs-on: ubuntu-latest
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the changed files back to the repository.
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Install markdown-toc
+        run: npm install --save -g markdown-toc
+      - name: Run markdown-toc
+        run: markdown-toc -i docs/rapport.md
+      - name: Generate PDF
+        run: docker run --rm --volume "$(pwd)/docs:/data" pandoc/latex rapport.md -o rapport.pdf
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Generate up-to-date rapport.pdf
