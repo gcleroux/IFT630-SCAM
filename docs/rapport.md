@@ -48,6 +48,7 @@ UNIVERSITÉ DE SHERBROOKE
 <!-- toc -->
 
 - [Introduction](#introduction)
+- [Revue de la littérature](#revue-de-la-litterature)
 - [Sections 1, 2, 3, ...](#sections-1-2-3-)
 - [Conclusion](#conclusion)
 - [Annexes](#annexes)
