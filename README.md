@@ -30,7 +30,6 @@ docker compose run ift630-scam
 Tous les tests doivent être ajoutés dans le dossier `test/` et suivre
 la [convention Go](https://pkg.go.dev/testing).
 
-On a un petit pipeline de CI qui va rouler sur toutes les branches à l'exception
-de `main`.
+On a un petit pipeline de CI qui va rouler sur toutes la branche `main`.
 
-Le pipeline s'exécute uniquement lors d'un `push`.
+De plus, toutes les PR doivent passer les tests avant de merge.
