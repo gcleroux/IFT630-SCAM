@@ -2,21 +2,25 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gcleroux/IFT630-SCAM/pkg/batiment"
 	"github.com/gcleroux/IFT630-SCAM/pkg/people"
+	"github.com/gcleroux/IFT630-SCAM/pkg/utils"
 )
 
 func main() {
 	start := time.Now()
+	conf, err := utils.LoadConfig("./conf/config.yml")
 
-	var budget int = 2000
-	var nbOuvrier int = 3
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	fmt.Println("Choix des batiments: ", batiment.ChoixBatiments)
 
-	budget = people.MayorStart(budget, nbOuvrier)
+	budget := people.MayorStart(conf.Budget, conf.NbOuvrier)
 
 	people.MayorEnd(budget)
 
