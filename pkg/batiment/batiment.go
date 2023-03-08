@@ -9,6 +9,10 @@ type BatimentInfo struct {
 	EffortBatiment int
 }
 
+var Projets = make(chan BatimentInfo, 100)
+var Complets = make(chan string, 100)
+var VilleContenu = []string{}
+
 var ChoixBatiments = []BatimentInfo{
 	{IdBatiment: 1, NomBatiment: "Parc", PrixBatiment: 250, EffortBatiment: 20},
 	{IdBatiment: 2, NomBatiment: "Hopital", PrixBatiment: 500, EffortBatiment: 50},
