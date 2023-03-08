@@ -49,7 +49,8 @@ UNIVERSITÉ DE SHERBROOKE
 
 - [Introduction](#introduction)
 - [Revue de la littérature](#revue-de-la-litterature)
-- [Sections 1, 2, 3, ...](#sections-1-2-3-)
+- [Structure du projet](#structure-du-projet)
+  * [Configuration](#configuration)
 - [Conclusion](#conclusion)
 - [Annexes](#annexes)
 - [Bibliographie](#bibliographie)
@@ -70,9 +71,18 @@ TEST TEST TEST
 
 \newpage
 
-# Sections 1, 2, 3, ...
+# Structure du projet
 
-Lorem ipsum dolor sit amet, officia excepteur ex fugiat reprehenderit enim labore culpa sint ad nisi Lorem pariatur mollit ex esse exercitation amet. Nisi anim cupidatat excepteur officia. Reprehenderit nostrud nostrud ipsum Lorem est aliquip amet voluptate voluptate dolor minim nulla est proident. Nostrud officia pariatur ut officia. Sit irure elit esse ea nulla sunt ex occaecat reprehenderit commodo officia dolor Lorem duis laboris cupidatat officia voluptate. Culpa proident adipisicing id nulla nisi laboris ex in Lorem sunt duis officia eiusmod. Aliqua reprehenderit commodo ex non excepteur duis sunt velit enim. Voluptate laboris sint cupidatat ullamco ut ea consectetur et est culpa et culpa duis.
+Le fichier [README.md](https://github.com/gcleroux/IFT630-SCAM/blob/main/README.md)
+donne une bonne idée générale de comment rouler notre projet. Cette section
+ira plus en détail dans la structure de projet.
+
+## Configuration
+
+Pour modifier les paramètres du programme, nous fournissons un fichier
+[config.yml](https://github.com/gcleroux/IFT630-SCAM/blob/main/conf/config.yml)
+situé dans le dossier `conf/` du répertoire. Il est ainsi facile de modifier les
+paramètres souhaités sans avoir à fouiller dans le code.
 
 \newpage
 
