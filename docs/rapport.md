@@ -50,7 +50,7 @@ UNIVERSITÉ DE SHERBROOKE
 - [Introduction](#introduction)
 - [Revue de la littérature](#revue-de-la-litterature)
 - [Structure du projet](#structure-du-projet)
-  - [Configuration](#configuration)
+  * [Configuration](#configuration)
 - [Conclusion](#conclusion)
 - [Annexes](#annexes)
 - [Bibliographie](#bibliographie)
