@@ -9,17 +9,17 @@ import (
 	"github.com/gcleroux/IFT630-SCAM/pkg/batiment"
 )
 
-type SafeCounter struct {
+type CitoyenLock struct {
 	mutex        sync.Mutex
 	nombreVisite int
 }
 
-func (c *SafeCounter) Visite() {
+func (c *CitoyenLock) Visite() {
 	c.mutex.Lock()
 	c.nombreVisite++
 	c.mutex.Unlock()
 }
-func (c *SafeCounter) NombreVisites() int {
+func (c *CitoyenLock) NombreVisites() int {
 	nbVisites := 0
 	c.mutex.Lock()
 	nbVisites = c.nombreVisite
@@ -31,7 +31,7 @@ type Citoyen struct {
 	IdCitoyen int
 }
 
-var c SafeCounter
+var c CitoyenLock
 var nombreVisite = 0
 
 func Population(idCitoyen int) {

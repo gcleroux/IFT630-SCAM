@@ -8,6 +8,34 @@ import (
 	"github.com/gcleroux/IFT630-SCAM/pkg/batiment"
 )
 
+// type MayorLock struct {
+// 	mutex  sync.Mutex
+// 	budget int
+// }
+
+// func (c *MayorLock) Depense(montant int) bool {
+// 	transaction := false
+// 	c.mutex.Lock()
+// 	if montant < c.budget {
+// 		c.budget -= montant
+// 		transaction = true
+// 	}
+// 	c.mutex.Unlock()
+// 	return transaction
+// }
+// func (c *MayorLock) Profit(montant int) {
+// 	c.mutex.Lock()
+// 	c.budget += montant
+// 	c.mutex.Unlock()
+// }
+// func (c *MayorLock) Budget() int {
+// 	budgetCourant := 0
+// 	c.mutex.Lock()
+// 	budgetCourant = c.budget
+// 	c.mutex.Unlock()
+// 	return budgetCourant
+// }
+
 func MayorHello() string {
 	return "Hello, Mayor!"
 }
