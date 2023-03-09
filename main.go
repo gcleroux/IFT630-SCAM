@@ -20,9 +20,9 @@ func main() {
 
 	fmt.Println("Choix des batiments: ", batiment.ChoixBatiments)
 
-	budget := people.MayorStart(conf.Budget, conf.NbOuvrier)
+	people.MayorStart(conf.Budget, conf.NbOuvrier, conf.NbCitoyen)
 
-	people.MayorEnd(budget)
+	people.MayorEnd()
 
 	elapsed := time.Since(start)
 	fmt.Print("Temps total d'exécution du programme:")
