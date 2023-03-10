@@ -35,9 +35,8 @@ var c CitoyenLock
 var nombreVisite = 0
 
 func Visite(idCitoyen int) {
-	visiteCompletee := false
 
-	for visiteCompletee == false {
+	for {
 		installations := batiment.VilleContenu
 
 		if len(installations) < 2 { // Pour l'instant si on met < 1, les citoyens vont tous dans le même batîment (trop long avant d'en avoir un 2e)
@@ -55,9 +54,8 @@ func Visite(idCitoyen int) {
 			installation := batiment.ChoixBatiments[index]
 			dureeVisite := installation.EffortBatiment
 			fmt.Println("Le citoyen", idCitoyen, "utilise les services offert par ", installation.NomBatiment)
-			time.Sleep(time.Millisecond * time.Duration(dureeVisite))
+			time.Sleep(time.Millisecond * time.Duration(dureeVisite*50))
 			c.Visite()
-			visiteCompletee = true
 		}
 	}
 }

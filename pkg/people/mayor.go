@@ -14,17 +14,13 @@ func MayorHello() string {
 
 var budgetVille int
 
-func MayorStart(budget int, nbOuvrier int, nbCitoyen int) {
+func MayorStart(budget int, nbOuvrier int) {
 	nbProjets := 0
 	plusPetitPrix := batiment.TrouveBatimentMoinsCher()
 	budgetVille = budget
 
 	for i := 0; i < nbOuvrier; i++ {
 		go Ouvrier(batiment.Projets, batiment.Complets)
-	}
-
-	for i := 0; i < nbCitoyen; i++ {
-		go Visite(i)
 	}
 
 	for budgetVille >= plusPetitPrix {

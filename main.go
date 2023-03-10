@@ -20,7 +20,11 @@ func main() {
 
 	fmt.Println("Choix des batiments: ", batiment.ChoixBatiments)
 
-	people.MayorStart(conf.Budget, conf.NbOuvrier, conf.NbCitoyen)
+	for i := 0; i < conf.NbCitoyen; i++ {
+		go people.Visite(i)
+	}
+
+	people.MayorStart(conf.Budget, conf.NbOuvrier)
 
 	people.MayorEnd()
 
