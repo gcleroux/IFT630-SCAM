@@ -24,7 +24,7 @@ func MayorStart(budget int, nbOuvrier int, nbCitoyen int) {
 	}
 
 	for i := 0; i < nbCitoyen; i++ {
-		go Population(i)
+		go Visite(i)
 	}
 
 	for budgetVille >= plusPetitPrix {

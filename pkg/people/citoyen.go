@@ -34,7 +34,7 @@ type Citoyen struct {
 var c CitoyenLock
 var nombreVisite = 0
 
-func Population(idCitoyen int) {
+func Visite(idCitoyen int) {
 	visiteCompletee := false
 
 	for visiteCompletee == false {
