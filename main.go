@@ -20,9 +20,13 @@ func main() {
 
 	fmt.Println("Choix des batiments: ", batiment.ChoixBatiments)
 
-	budget := people.MayorStart(conf.Budget, conf.NbOuvrier)
+	for i := 0; i < conf.NbCitoyen; i++ {
+		go people.Visite(i)
+	}
 
-	people.MayorEnd(budget)
+	people.MayorStart(conf.Budget, conf.NbOuvrier)
+
+	people.MayorEnd()
 
 	elapsed := time.Since(start)
 	fmt.Print("Temps total d'exécution du programme:")
