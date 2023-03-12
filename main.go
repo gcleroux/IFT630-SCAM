@@ -24,9 +24,10 @@ func main() {
 		go people.Visite(i)
 	}
 
-	people.MayorStart(conf.Budget, conf.NbOuvrier)
+	fmt.Println("Le Maire est embauché")
+	people.MayorStart(conf.Budget, conf.NbOuvrier, conf.NbJours, conf.NbJoie, conf.NbSante)
 
-	people.MayorEnd()
+	people.MayorEnd(conf.NbJours, conf.NbJoie, conf.NbSante)
 
 	elapsed := time.Since(start)
 	fmt.Print("Temps total d'exécution du programme:")
