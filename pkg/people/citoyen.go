@@ -16,15 +16,13 @@ type CitoyenLock struct {
 
 func (c *CitoyenLock) Visite() {
 	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	c.nombreVisite++
-	c.mutex.Unlock()
 }
 func (c *CitoyenLock) NombreVisites() int {
-	nbVisites := 0
 	c.mutex.Lock()
-	nbVisites = c.nombreVisite
-	c.mutex.Unlock()
-	return nbVisites
+	defer c.mutex.Unlock()
+	return c.nombreVisite
 }
 
 type Citoyen struct {
