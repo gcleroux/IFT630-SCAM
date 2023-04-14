@@ -7,59 +7,52 @@ import (
 )
 
 var dateHier int = -1
-var dateAuj int = 0
 
-func Ouvrier(projets <-chan batiment.BatimentInfo, complets chan<- string, calendrier <-chan int /*, buildingBoard <-chan []batiment.BatimentInfo*/) {
+func Ouvrier(projets <-chan batiment.BatimentInfo, complets chan<- string, calendrier <-chan int /*, buildingBoard <-chan []batiment.BatimentInfo*/, numOuvrier int) {
 
-	contrat := -1
+	contrat := -1 //IdUniqueBatiment du batiment sur lequel l'ouvrier travaille.
 	dateAuj = <-calendrier
 
 	for {
+		//dateAuj = GetDateAuj()
 		if dateHier < dateAuj { //Une fois par jour
-			if contrat != -1 { //Si l'Ouvrier a déjà un contrat
-				i := 0
-				for commande := range projets { //Il essaie de retrouver son contrat
-					if i == contrat { //Il retrouve son contrat
+			if len(batiment.GetBuildingBoard()) == 0 {
+				dateHier++
+			} else if contrat != -1 { //Si l'Ouvrier a déjà un contrat
+				for _, commande := range batiment.GetBuildingBoard() { //Il essaie de retrouver son contrat
+					if contrat == commande.IdUniqueBatiment { //Il retrouve son contrat
 						if commande.ConstructionBatiment < commande.EffortBatiment { //Si le batiment n'est pas terminé d'être construit
-							commande.ConstructionBatiment += 50
-							fmt.Println("Un ouvrier travaille sur la construction du Batiment #", i, ":", commande.NomBatiment, ". Le bâtiment est maintenant à ", commande.ConstructionBatiment, "/", commande.EffortBatiment, "de construit.")
-							if commande.ConstructionBatiment >= commande.EffortBatiment { //Si l'ouvrier fini la construction du batiment
-								batiment.VilleContenu = append(batiment.VilleContenu, commande.NomBatiment)
-								msg := fmt.Sprint("Un ouvrier a terminer la construction du Batiment #", i, ":", commande.NomBatiment)
-								complets <- msg
-								contrat = -1 //Il reset son contrat
+							codeRetour := batiment.Ajoute50Construction(contrat, numOuvrier) //L'ouvrier met 50 points de construction dans ce bâtiment.
+							if codeRetour == 2 {                                             //Si l'ouvrier fini la construction du batiment
+								batiment.VilleContenu = append(batiment.VilleContenu, commande.NomBatiment) //Le bâtiment est ajouté à la liste des bâtiment fini de la ville.
+								batiment.RemoveFromBuildingBoard(commande.IdUniqueBatiment)                 //Remove from buildingBoard.
+								contrat = -1                                                                //Il reset son contrat
+							} else if codeRetour == 1 {
+
+							} else {
+								fmt.Println("Erreur dans la logique d'un ouvrier")
 							}
 						}
 						break //Il arrête de chercher son contrat
-					} else {
-						i++ //Il continue de chercher son contrat
+						//} else {
+						//	i++ //Il continue de chercher son contrat
 					}
 				}
-
+				contrat = -1
 			} else { //Si l'Ouvrier n'a pas déjà un contrat
-				i := 0
-				for commande := range projets { //Il passe à travers les contrats possible
+				//i := 0
+				for _, commande := range batiment.GetBuildingBoard() { //Il passe à travers les contrats possibles
 					if commande.ConstructionBatiment < commande.EffortBatiment { //Il trouve le premier non-complété
-						if commande.ConstructionBatiment == 0 { //S'il n'a pas encore été touché du tout
-							commande.ConstructionBatiment += 50
-							fmt.Println("Un ouvrier commence la construction du Batiment #", i, ":", commande.NomBatiment, ". Le bâtiment est maintenant à ", commande.ConstructionBatiment, "/", commande.EffortBatiment, "de construit.")
-							contrat = i
-							break
-						} else { //Si le contrat a été commencé mais pas complété
-							commande.ConstructionBatiment += 50
-							if commande.ConstructionBatiment >= commande.EffortBatiment { //S'il termine la construction du Batiment
-								batiment.VilleContenu = append(batiment.VilleContenu, commande.NomBatiment)
-								msg := fmt.Sprint("Un ouvrier a terminer la construction du Batiment #", i, ":", commande.NomBatiment)
-								complets <- msg
-								contrat = -1 //Il reset son contrat
-							} else { //S'il ne termine pas la construction du Batiment
-								fmt.Println("Un ouvrier travaille sur la construction du Batiment #", i, ":", commande.NomBatiment, ". Le bâtiment est maintenant à ", commande.ConstructionBatiment, "/", commande.EffortBatiment, "de construit.")
-								contrat = 1 //Il mémorise de quel batiment il s'agit pour y travailler le lendemain
-							}
-							break
+						codeRetour := batiment.Ajoute50Construction(commande.IdUniqueBatiment, numOuvrier) //L'ouvrier met 50 points de construction dans ce bâtiment.
+						if codeRetour == 1 {                                                               //S'il ne termine pas la construction du Batiment
+							contrat = commande.IdUniqueBatiment
+						} else if codeRetour == 2 { //S'il termine la construction du Batiment
+							batiment.VilleContenu = append(batiment.VilleContenu, commande.NomBatiment) //Le bâtiment est ajouté à la liste des bâtiment fini de la ville.
+							batiment.RemoveFromBuildingBoard(commande.IdUniqueBatiment)                 //Remove from buildingBoard.
+							contrat = -1                                                                //Il reset son contrat
+							//complet <- msg
 						}
-					} else {
-						i++ // Il regarde le prochain contrat
+						break
 					}
 				}
 			}
