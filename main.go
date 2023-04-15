@@ -35,6 +35,11 @@ func main() {
 		// recevoir le channel en parametre
 		done := utils.DayTime(time.Duration(conf.DayTime) * time.Second)
 
+		//NOTE: Une facon alternative de gérer la sync serait d'avoir des tick comme sur un moteur de jeu.
+		//      On pourrait avoir 5 ticks par jours, donc présumément 5 steps par jours et c'est ça qui assurerait
+		//      la synchronisation des goroutine. J'ai mis du temps pour que ce soit plus facile a faire pour l'instant
+		//      mais faire des ticks serait pas trop compliqué selon moi
+
 		wg.Add(1)
 		go batiment.RegistreStep(&wg, done)
 
@@ -56,9 +61,13 @@ func main() {
 
 	}
 
-	// people.MayorEnd()
+	//TODO: Faire un cleanup des channels avec les fcts MayorEnd, CitoyenEnd, etc.
 
-	elapsed := time.Since(start)
-	fmt.Print("Temps total d'exécution du programme:")
-	fmt.Println(elapsed)
+	fmt.Println("Liste des batiments dans la ville")
+	fmt.Println("=================================")
+	for _, b := range batiment.BatimentsVille {
+		fmt.Println(b)
+	}
+
+	fmt.Println("\nTemps total d'exécution du programme:", time.Since(start))
 }
