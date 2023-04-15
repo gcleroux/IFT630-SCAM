@@ -1,33 +1,62 @@
 package batiment
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+	"sync"
+)
 
 // Tous les batiments disponibles dans la simulation
 var TypesBatiments []Batiment = loadBatimentsInfos("./conf/batiments/")
 
-// Public functions
-func RegistreBatiment() {
-	// if len(typesBatiments) == 0 {
-	// 	typesBatiments = loadBatimentsInfos("./conf/batiments/")
-	// }
-
-	fmt.Println(TypesBatiments)
-}
+// Batiments contenus dans la ville
+var BatimentsVille []Batiment = []Batiment{}
 
 // Channels
+var EnConstruction = make(chan Batiment, 100)
+
 var Projects = make(chan Batiment, 100)
 var Complets = make(chan Batiment, 100)
 var Registre = make(chan Batiment, 100)
 
-// func TrouveBatimentMoinsCher() int {
-// 	plusPetitPrix := math.MaxInt
-// 	for i := 0; i < len(ChoixBatiments); i++ {
-// 		if ChoixBatiments[i].PrixBatiment < plusPetitPrix {
-// 			plusPetitPrix = ChoixBatiments[i].PrixBatiment
-// 		}
-// 	}
-// 	return plusPetitPrix
-// }
+// Le registre reste ouvert toute la journee
+func RegistreStep(wg *sync.WaitGroup, done <-chan interface{}) {
+	defer wg.Done()
+
+	for {
+		select {
+		case b := <-EnConstruction:
+			fmt.Println("Le maire a demande un batiment", b.Name)
+		case <-done:
+			// La journee est terminee
+			return
+		}
+	}
+}
+
+// Trouve le prix le moins cher des batiments de la ville
+func TrouveBatimentMoinsCher() int {
+	min := math.MaxInt
+	for _, b := range TypesBatiments {
+		if b.Price < min {
+			min = b.Price
+		}
+	}
+	return min
+}
+
+// Retourne une liste des batiments qu'on peut se permettre selon un budget
+func GetBatimentsAbordables(budget int) []Batiment {
+	res := []Batiment{}
+
+	for _, b := range TypesBatiments {
+		if b.Price <= budget {
+			res = append(res, b)
+		}
+	}
+	return res
+}
+
 //
 // func GetRandomBatiment() Batiment {
 // 	idx := rand.Intn(len(ChoixBatiments))
