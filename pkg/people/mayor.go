@@ -19,6 +19,7 @@ var budgetVille int
 var joursActuel int
 var itérateurIdUniqueBatiment int
 var dateAuj int = 0
+var nbThreadsPret int = 0
 
 func MayorStart(budget int, nbOuvrier int, nbJours int, nbJoie int, nbSante int) {
 	nbProjets := 0
@@ -29,11 +30,11 @@ func MayorStart(budget int, nbOuvrier int, nbJours int, nbJoie int, nbSante int)
 	// Le Maire embauche les Ouvriers de départ
 	fmt.Println("Le Maire embauche ", nbOuvrier, " Ouvriers.")
 	for numOuvrier := 0; numOuvrier < nbOuvrier; numOuvrier++ {
-		go Ouvrier(batiment.Projets, batiment.Complets, batiment.Calendrier /*, batiment.BuildingBoard*/, numOuvrier)
+		go Ouvrier(batiment.Complets, batiment.Calendrier, numOuvrier)
 	}
 
 	for joursActuel = 0; joursActuel < nbJours; joursActuel++ {
-		fmt.Println("Le jour # ", joursActuel, " commence.")
+		fmt.Println("--- Le jour # ", joursActuel, " commence. ---")
 		dateAuj = joursActuel
 		// Le maire commande un nouveau bâtiment par jour
 		if budgetVille >= plusPetitPrix {
@@ -66,7 +67,14 @@ func MayorStart(budget int, nbOuvrier int, nbJours int, nbJoie int, nbSante int)
 		}
 
 		//Le Maire attend que les Ouvriers et Citoyens aient fini de travailler pour la journée
-		time.Sleep(5 * time.Second)
+		//time.Sleep(5 * time.Second)
+
+		for {
+			if nbThreadsPret == nbOuvrier {
+				break
+			}
+		}
+		nbThreadsPret = 0
 
 		// À la fin de la journée, le Maire vérifie si une Ressource Secondaire est à 0, dans quel cas la ville s'effronde
 		if nbJoie <= 0 || nbSante <= 0 {
@@ -107,4 +115,8 @@ func MayorEnd(nbJours int, nbJoie int, nbSante int) {
 
 func GetDateAuj() int {
 	return dateAuj
+}
+
+func IncNbThreadPret() {
+	nbThreadsPret += 1
 }
