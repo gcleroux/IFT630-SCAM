@@ -90,6 +90,16 @@ func CheckWorkDone(t Travail) {
 	}
 }
 
+func VisiteBatiment() (Batiment, error) {
+	if len(BatimentsVille) == 0 {
+		return Batiment{}, errors.New("Pas de batiment dans la ville")
+	}
+	//TODO: Prendre en compte la capacite des batiments
+
+	// On retourne un batiment a visiter au hasard
+	return BatimentsVille[rand.Intn(len(BatimentsVille))], nil
+}
+
 //
 // func GetRandomBatiment() Batiment {
 // 	idx := rand.Intn(len(ChoixBatiments))

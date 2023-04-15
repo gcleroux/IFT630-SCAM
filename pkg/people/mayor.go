@@ -16,27 +16,38 @@ func MayorHello() string {
 var nbProjets int
 var budgetVille int
 
+// Channels
+var Revenus = make(chan int)
+
 func MayorInit(budget int) {
 	nbProjets = 0
 	budgetVille = budget
 }
 
-func MayorStep(wg *sync.WaitGroup) {
+func MayorStep(wg *sync.WaitGroup, done <-chan interface{}) {
 	defer wg.Done()
 	// On retrouve la liste des batiments abordables
 	abordables := batiment.GetBatimentsAbordables(budgetVille)
 
-	if len(abordables) == 0 {
-		// On ne peut rien faire ajd
-		return
+	if len(abordables) != 0 {
+		// On choisit un batiment au hasard dans la liste des batiments abordables
+		choix := abordables[rand.Intn(len(abordables))]
+		nbProjets++
+		budgetVille -= choix.Price
+		fmt.Println("[MAYOR]: Le maire a demande la construction d'un", choix.Name)
+		batiment.EnConstruction <- choix
 	}
 
-	// On choisit un batiment au hasard dans la liste des batiments abordables
-	choix := abordables[rand.Intn(len(abordables))]
-	nbProjets++
-	budgetVille -= choix.Price
-	fmt.Println("[MAYOR]: Le maire a demande la construction d'un", choix.Name)
-	batiment.EnConstruction <- choix
+	for {
+		select {
+		case r := <-Revenus:
+			budgetVille += r
+		case <-done:
+			fmt.Println("Budget =", budgetVille)
+			// La journee est terminee
+			return
+		}
+	}
 }
 
 // 	for i := 0; i < nbOuvrier; i++ {

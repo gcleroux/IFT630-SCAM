@@ -19,7 +19,7 @@ func main() {
 	}
 	people.MayorInit(conf.Budget)
 	people.OuvrierInit(conf.NbOuvrier, conf.TravailOuvrier)
-	// people.CitoyenInit(conf.NbCitoyen)
+	people.CitoyenInit(conf.NbCitoyen)
 
 	start := time.Now()
 
@@ -39,11 +39,16 @@ func main() {
 		go batiment.RegistreStep(&wg, done)
 
 		wg.Add(1)
-		go people.MayorStep(&wg)
+		go people.MayorStep(&wg, done)
 
 		wg.Add(conf.NbOuvrier)
 		for i := 0; i < conf.NbOuvrier; i++ {
 			go people.OuvrierStep(&wg)
+		}
+
+		wg.Add(conf.NbCitoyen)
+		for i := 0; i < conf.NbCitoyen; i++ {
+			go people.CitoyenStep(&wg)
 		}
 
 		// On attend que tout le monde dans la ville termine sa journee
