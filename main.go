@@ -18,7 +18,7 @@ func main() {
 		log.Fatal(err)
 	}
 	people.MayorInit(conf.Budget)
-	// people.OuvrierInit(conf.NbOuvrier)
+	people.OuvrierInit(conf.NbOuvrier, conf.TravailOuvrier)
 	// people.CitoyenInit(conf.NbCitoyen)
 
 	start := time.Now()
@@ -30,7 +30,9 @@ func main() {
 		// Affichage de la journee
 		fmt.Printf("\nJour #%d\n=========\n", jour)
 
-		// Un channel qui sera ferme a la fin d'une journee
+		// Un obtient le channel qui sera ferme a la fin d'une journee
+		// Les composantes qui sont dependants de la longueur d'une journee doivent
+		// recevoir le channel en parametre
 		done := utils.DayTime(time.Duration(conf.DayTime) * time.Second)
 
 		wg.Add(1)
@@ -38,6 +40,11 @@ func main() {
 
 		wg.Add(1)
 		go people.MayorStep(&wg)
+
+		wg.Add(conf.NbOuvrier)
+		for i := 0; i < conf.NbOuvrier; i++ {
+			go people.OuvrierStep(&wg)
+		}
 
 		// On attend que tout le monde dans la ville termine sa journee
 		wg.Wait()

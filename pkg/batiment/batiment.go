@@ -21,6 +21,17 @@ type Batiment struct {
 	Income   int    `yaml:income`
 }
 
+type Projet struct {
+	Id       int
+	Batiment Batiment
+	Travail  int
+}
+
+type Travail struct {
+	Id     int
+	Effort int
+}
+
 // Load les infos des batiments a partir des fichiers YAML
 func loadBatimentsInfos(prefix string) []Batiment {
 	// Liste vides des batiments

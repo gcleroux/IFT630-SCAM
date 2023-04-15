@@ -1,25 +1,35 @@
 package people
 
-//
-// import (
-// 	"fmt"
-// 	"time"
-//
-// 	"github.com/gcleroux/IFT630-SCAM/pkg/batiment"
-// )
-//
-// func Ouvrier(projets <-chan batiment.BatimentInfo, complets chan<- string) {
-//
-// 	for commande := range projets {
-//
-// 		var effortTotal = commande.EffortBatiment
-// 		fmt.Println("Un ouvrier commence la construction de : ", commande.NomBatiment)
-// 		for i := 0; i < effortTotal; i++ {
-// 			time.Sleep(time.Millisecond * 50)
-// 		}
-// 		batiment.VilleContenu = append(batiment.VilleContenu, commande.NomBatiment)
-//
-// 		msg := fmt.Sprint("Un ouvrier a terminer la construction de : ", commande.NomBatiment)
-// 		complets <- msg
-// 	}
-// }
+import (
+	"fmt"
+	"sync"
+
+	"github.com/gcleroux/IFT630-SCAM/pkg/batiment"
+)
+
+// La qte de travail qu'on ouvrier peut faire dans une journee
+var nbOuvriers int
+var travailOuvrier int
+
+func OuvrierInit(nb int, travail int) {
+	nbOuvriers = nb
+	travailOuvrier = travail
+}
+
+func OuvrierStep(wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	// On demande au registre quel chantier rejoindre pour la journee
+	job, err := batiment.DemandeTravail()
+
+	if err != nil {
+		// On a pas de travail a faire pour la journee
+		return
+	}
+
+	fmt.Println("Un ouvrier travaille sur le chantier du ", job.Batiment.Name)
+
+	// On signale au registre qu'on a terminé pour la journee
+	work := batiment.Travail{job.Id, travailOuvrier}
+	batiment.JourneeTravail <- work
+}

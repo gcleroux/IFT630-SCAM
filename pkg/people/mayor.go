@@ -1,6 +1,7 @@
 package people
 
 import (
+	"fmt"
 	"math/rand"
 	"sync"
 
@@ -14,7 +15,6 @@ func MayorHello() string {
 // Attributs propres au maire de la ville
 var nbProjets int
 var budgetVille int
-var nbOuvriers int
 
 func MayorInit(budget int) {
 	nbProjets = 0
@@ -35,6 +35,7 @@ func MayorStep(wg *sync.WaitGroup) {
 	choix := abordables[rand.Intn(len(abordables))]
 	nbProjets++
 	budgetVille -= choix.Price
+	fmt.Println("[MAYOR]: Le maire a demande la construction d'un", choix.Name)
 	batiment.EnConstruction <- choix
 }
 

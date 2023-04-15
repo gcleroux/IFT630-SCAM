@@ -1,8 +1,10 @@
 package batiment
 
 import (
+	"errors"
 	"fmt"
 	"math"
+	"math/rand"
 	"sync"
 )
 
@@ -12,12 +14,13 @@ var TypesBatiments []Batiment = loadBatimentsInfos("./conf/batiments/")
 // Batiments contenus dans la ville
 var BatimentsVille []Batiment = []Batiment{}
 
-// Channels
-var EnConstruction = make(chan Batiment, 100)
+// Tous les batiments activement en construction
+var idProjet int = 0
+var Projets []Projet = []Projet{}
 
-var Projects = make(chan Batiment, 100)
-var Complets = make(chan Batiment, 100)
-var Registre = make(chan Batiment, 100)
+// Channels
+var EnConstruction = make(chan Batiment)
+var JourneeTravail = make(chan Travail)
 
 // Le registre reste ouvert toute la journee
 func RegistreStep(wg *sync.WaitGroup, done <-chan interface{}) {
@@ -26,7 +29,11 @@ func RegistreStep(wg *sync.WaitGroup, done <-chan interface{}) {
 	for {
 		select {
 		case b := <-EnConstruction:
-			fmt.Println("Le maire a demande un batiment", b.Name)
+			// On ajoute la demande du maire au projet en cours
+			Projets = append(Projets, Projet{idProjet, b, 0})
+			idProjet++
+		case t := <-JourneeTravail:
+			CheckWorkDone(t)
 		case <-done:
 			// La journee est terminee
 			return
@@ -55,6 +62,32 @@ func GetBatimentsAbordables(budget int) []Batiment {
 		}
 	}
 	return res
+}
+
+func DemandeTravail() (Projet, error) {
+	if len(Projets) == 0 {
+		return Projet{}, errors.New("Pas de projet en cours")
+	}
+	//TODO: Il serait bien d'utilser capacite dans le batiment pour limiter le nombre d'ouvrier sur un projet
+	// On retourne un projet au hasard
+	return Projets[rand.Intn(len(Projets))], nil
+}
+
+func CheckWorkDone(t Travail) {
+	for idx, p := range Projets {
+		if p.Id == t.Id {
+			// On ajoute le travail de l'ouvrier au projet
+			p.Travail += t.Effort
+			Projets[idx] = p
+
+			// Le batiment est complete, on l'enleve des projets pour le mettre dans les complets
+			if p.Travail >= p.Batiment.Work {
+				fmt.Println("[REGISTRE]: La construction de", p.Batiment.Name, "est terminée!")
+				Projets = append(Projets[:idx], Projets[idx+1:]...)
+				BatimentsVille = append(BatimentsVille, p.Batiment)
+			}
+		}
+	}
 }
 
 //

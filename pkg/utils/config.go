@@ -8,11 +8,12 @@ import (
 )
 
 type conf struct {
-	Budget    int `yaml:"budget"`
-	NbOuvrier int `yaml:"nbOuvriers"`
-	NbCitoyen int `yaml:"nbCitoyens"`
-	NbJour    int `yaml:"nbJours"`
-	DayTime   int `yaml:"dayTime"`
+	Budget         int `yaml:"budget"`
+	NbOuvrier      int `yaml:"nbOuvriers"`
+	TravailOuvrier int `yaml:"travailOuvriers"`
+	NbCitoyen      int `yaml:"nbCitoyens"`
+	NbJour         int `yaml:"nbJours"`
+	DayTime        int `yaml:"dayTime"`
 }
 
 func LoadConfig(filename string) (*conf, error) {
