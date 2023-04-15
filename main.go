@@ -5,23 +5,19 @@ import (
 	"log"
 	"time"
 
-	"github.com/gcleroux/IFT630-SCAM/pkg/batiment"
 	"github.com/gcleroux/IFT630-SCAM/pkg/people"
 	"github.com/gcleroux/IFT630-SCAM/pkg/utils"
 )
 
 func main() {
-	start := time.Now()
+	// Load global config
 	conf, err := utils.LoadConfig("./conf/config.yml")
-
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Choix des batiments: ", batiment.ChoixBatiments)
-
+	start := time.Now()
 	people.MayorStart(conf.Budget, conf.NbOuvrier, conf.NbCitoyen)
-
 	people.MayorEnd()
 
 	elapsed := time.Since(start)

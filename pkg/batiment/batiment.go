@@ -1,31 +1,52 @@
 package batiment
 
-import "math"
+// Ce fichier crée la struct pour encapsuler un batiment
+// Si certains attributs des batiments sont modifiés, il est
+// important d'ajuster ce fichier
 
-type BatimentInfo struct {
-	IdBatiment         int
-	NomBatiment        string
-	PrixBatiment       int
-	EffortBatiment     int
-	TauxProfitBatiment float32
+import (
+	"io/ioutil"
+	"log"
+	"os"
+
+	"gopkg.in/yaml.v3"
+)
+
+type Batiment struct {
+	Id       int    `yaml:"id"`
+	Name     string `yaml:"name"`
+	Price    int    `yaml:price`
+	Work     int    `yaml:work`
+	Capacity int    `yaml:capacity`
+	Income   int    `yaml:income`
 }
 
-var Projets = make(chan BatimentInfo, 100)
-var Complets = make(chan string, 100)
-var VilleContenu = []string{}
+// Load les infos des batiments a partir des fichiers YAML
+func loadBatimentsInfos(prefix string) []Batiment {
+	// Liste vides des batiments
+	batiments := []Batiment{}
 
-var ChoixBatiments = []BatimentInfo{
-	{IdBatiment: 1, NomBatiment: "Parc", PrixBatiment: 250, EffortBatiment: 20, TauxProfitBatiment: 0},
-	{IdBatiment: 2, NomBatiment: "Hopital", PrixBatiment: 500, EffortBatiment: 50, TauxProfitBatiment: 0.15},
-	{IdBatiment: 3, NomBatiment: "Hotel", PrixBatiment: 400, EffortBatiment: 40, TauxProfitBatiment: 0.25},
-}
+	// Get liste des fichiers YAML des batiments
+	batimentFiles, err := ioutil.ReadDir(prefix)
 
-func TrouveBatimentMoinsCher() int {
-	plusPetitPrix := math.MaxInt
-	for i := 0; i < len(ChoixBatiments); i++ {
-		if ChoixBatiments[i].PrixBatiment < plusPetitPrix {
-			plusPetitPrix = ChoixBatiments[i].PrixBatiment
-		}
+	// Erreur directory non trouve
+	if err != nil {
+		log.Fatalf("error: %v", err)
 	}
-	return plusPetitPrix
+
+	for _, file := range batimentFiles {
+		// Read the file's data
+		data, err := os.ReadFile(prefix + file.Name())
+		if err != nil {
+			log.Fatalf("error: %v", err)
+		}
+
+		var batiment Batiment
+		err = yaml.Unmarshal(data, &batiment)
+		if err != nil {
+			log.Fatalf("error: %v", err)
+		}
+		batiments = append(batiments, batiment)
+	}
+	return batiments
 }
