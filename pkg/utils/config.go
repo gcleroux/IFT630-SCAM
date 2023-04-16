@@ -11,6 +11,9 @@ type conf struct {
 	Budget    int `yaml:"budget"`
 	NbOuvrier int `yaml:"nbOuvriers"`
 	NbCitoyen int `yaml:"nbCitoyens"`
+	NbJours   int `yaml:"nbJours"`
+	NbJoie    int `yaml:"nbJoie"`
+	NbSante   int `yaml:"nbSante"`
 }
 
 func LoadConfig(filename string) (*conf, error) {

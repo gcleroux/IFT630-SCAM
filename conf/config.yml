@@ -2,3 +2,6 @@
 budget: 2000
 nbOuvriers: 3
 nbCitoyens: 12
+nbJours: 30 #TODO: Changer a 120 pour la remise
+nbJoie: 1000
+nbSante: 1000

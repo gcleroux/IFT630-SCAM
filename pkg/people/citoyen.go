@@ -19,6 +19,7 @@ func (c *CitoyenLock) Visite() {
 	defer c.mutex.Unlock()
 	c.nombreVisite++
 }
+
 func (c *CitoyenLock) NombreVisites() int {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -30,7 +31,8 @@ type Citoyen struct {
 }
 
 var c CitoyenLock
-var nombreVisite = 0
+
+//var nombreVisite = 0
 
 func Visite(idCitoyen int) {
 
@@ -58,6 +60,6 @@ func Visite(idCitoyen int) {
 	}
 }
 
-func NbVisites() int {
+func GetNbVisites() int {
 	return c.NombreVisites()
 }
