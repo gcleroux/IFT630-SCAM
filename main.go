@@ -17,6 +17,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Init des personnages
 	people.MayorInit(conf.Budget)
 	people.OuvrierInit(conf.NbOuvrier, conf.TravailOuvrier)
 	people.CitoyenInit(conf.NbCitoyen)
@@ -40,6 +42,9 @@ func main() {
 		//      la synchronisation des goroutine. J'ai mis du temps pour que ce soit plus facile a faire pour l'instant
 		//      mais faire des ticks serait pas trop compliqué selon moi
 
+		// Pour ajouter des types de personnes dans la simulation, on a juste a lancer une goroutine
+		// avec une methode Step() pour qu'il soit intégré au pipeline
+
 		wg.Add(1)
 		go batiment.RegistreStep(&wg, done)
 
@@ -48,7 +53,7 @@ func main() {
 
 		wg.Add(conf.NbOuvrier)
 		for i := 0; i < conf.NbOuvrier; i++ {
-			go people.OuvrierStep(&wg)
+			go people.OuvrierStep(&wg, i)
 		}
 
 		wg.Add(conf.NbCitoyen)

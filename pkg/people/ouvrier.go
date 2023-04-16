@@ -16,11 +16,11 @@ func OuvrierInit(nb int, travail int) {
 	travailOuvrier = travail
 }
 
-func OuvrierStep(wg *sync.WaitGroup) {
+func OuvrierStep(wg *sync.WaitGroup, id int) {
 	defer wg.Done()
 
 	// On demande au registre quel chantier rejoindre pour la journee
-	job, err := batiment.DemandeTravail()
+	job, err := batiment.DemandeTravail(id)
 
 	if err != nil {
 		// On a pas de travail a faire pour la journee

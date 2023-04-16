@@ -3,5 +3,5 @@ budget: 2000
 nbOuvriers: 3
 travailOuvriers: 5
 nbCitoyens: 5
-nbJours: 30
+nbJours: 120
 dayTime: 1
