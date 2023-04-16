@@ -56,7 +56,7 @@ func Ajoute50Construction(idUniqueRecu int, numOuvrier int) int {
 				return 1
 			}
 			if buildingBoard[i].ConstructionBatiment >= commande.EffortBatiment {
-				fmt.Println("L'ouvrier ", numOuvrier, " a terminer la construction du Batiment #", commande.IdUniqueBatiment, ":", commande.NomBatiment)
+				fmt.Println("L'ouvrier ", numOuvrier, " a terminé la construction du Batiment #", commande.IdUniqueBatiment, ":", commande.NomBatiment)
 				return 2
 			} else {
 				fmt.Println("L'ouvrier ", numOuvrier, " travaille sur la construction du Batiment #", commande.IdUniqueBatiment, ":", commande.NomBatiment, ". Le bâtiment est maintenant à ", buildingBoard[i].ConstructionBatiment, "/", commande.EffortBatiment, "de construit.")

@@ -69,7 +69,7 @@ func Ouvrier(complets chan<- string, calendrier <-chan int, numOuvrier int) {
 				IncNbThreadPret()
 				dateHier++
 			}
-		} else {
+			//} else {
 			//fmt.Println("Un ouvrier n'est pas en train de travailler")
 		}
 		//fmt.Println("Un ouvrier termine sa journée de travail")

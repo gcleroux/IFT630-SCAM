@@ -20,38 +20,57 @@ var joursActuel int
 var itérateurIdUniqueBatiment int
 var dateAuj int = 0
 var nbThreadsPret int = 0
+var nbEmployes int = 0
+var tauxEmployes float64 = 0
+var nbOuvriers int = 0
+var nbCitoyens int = 0
 
-func MayorStart(budget int, nbOuvrier int, nbJours int, nbJoie int, nbSante int) {
+func MayorStart(budget int, nbOuvrierInitiaux int, nbJours int, nbJoie int, nbSante int, nbCitoyenInitiaux int) {
 	nbProjets := 0
 	plusPetitPrix := batiment.TrouveBatimentMoinsCher()
 	budgetVille = budget
-	joursActuel = 0
+	nbCitoyens = nbCitoyenInitiaux
 
 	// Le Maire embauche les Ouvriers de départ
-	fmt.Println("Le Maire embauche ", nbOuvrier, " Ouvriers.")
-	for numOuvrier := 0; numOuvrier < nbOuvrier; numOuvrier++ {
-		go Ouvrier(batiment.Complets, batiment.Calendrier, numOuvrier)
-	}
+	EmbaucheOuvriers(nbOuvrierInitiaux)
+	// fmt.Println("Le Maire embauche ", nbOuvriers, " Ouvriers.")
+	// for numOuvrier := 0; numOuvrier < nbOuvriers; numOuvrier++ {
+	// 	go Ouvrier(batiment.Complets, batiment.Calendrier, numOuvrier)
+	// }
 
 	for joursActuel = 0; joursActuel < nbJours; joursActuel++ {
 		fmt.Println("--- Le jour # ", joursActuel, " commence. ---")
 		dateAuj = joursActuel
+
+		// Chaque matin, un nombre aléatoire de nouveaux Citoyens et Ouvriers sont nés/générés.
+		budgetVille += (rand.Intn(30)) * 5 //TODO: A ENLEVER
+		fmt.Println("--- Le budget de la ville est à ", budgetVille, " $. ---")
+		nbNouveauxOuvrier := (rand.Intn(4) - 3) // 0 <= int < X
+
+		//Les nouveaux Ouvriers sont mis à la tâche
+		if nbNouveauxOuvrier > 0 {
+			fmt.Println("--- Le maire engage ", nbNouveauxOuvrier, " nouveaux ouvriers. ---")
+			EmbaucheOuvriers(nbNouveauxOuvrier)
+		}
+
 		// Le maire commande un nouveau bâtiment par jour
-		if budgetVille >= plusPetitPrix {
-			batimentChoisi := rand.Intn(len(batiment.ChoixBatiments))
-			if budgetVille > batiment.ChoixBatiments[batimentChoisi].PrixBatiment {
-				fmt.Println("Le Maire commande la construction d'un ", batiment.ChoixBatiments[batimentChoisi].NomBatiment)
-				commande := batiment.ChoixBatiments[batimentChoisi]
-				commande.IdUniqueBatiment = itérateurIdUniqueBatiment
-				itérateurIdUniqueBatiment++
-				budgetVille -= commande.PrixBatiment
+		if budgetVille >= plusPetitPrix { //Si le maire n'a pas l'argent pour le moins chère des bâtiments, il n'essaie pas de commander
+			if tauxEmployes < 0.95 { //Si son Taux d’Employé est trop haut, il ne commande pas de nouveau bâtiment, car il n’aura personne pour les utiliser.
+				batimentChoisi := rand.Intn(len(batiment.ChoixBatiments)) //Le maire choisi un bâtiment au hasard à construire //TODO: A CHANGER
+				if budgetVille > batiment.ChoixBatiments[batimentChoisi].PrixBatiment {
+					fmt.Println("Le Maire commande la construction d'un ", batiment.ChoixBatiments[batimentChoisi].NomBatiment)
+					commande := batiment.ChoixBatiments[batimentChoisi]
+					commande.IdUniqueBatiment = itérateurIdUniqueBatiment
+					itérateurIdUniqueBatiment++
+					budgetVille -= commande.PrixBatiment
 
-				nbProjets++
-				batiment.Projets <- commande
+					nbProjets++
+					batiment.Projets <- commande
 
-				buildingBoard := batiment.GetBuildingBoard()
-				buildingBoard = append(buildingBoard, commande)
-				batiment.SetBuildingBoard(buildingBoard)
+					buildingBoard := batiment.GetBuildingBoard()
+					buildingBoard = append(buildingBoard, commande)
+					batiment.SetBuildingBoard(buildingBoard)
+				}
 			}
 		}
 
@@ -62,19 +81,18 @@ func MayorStart(budget int, nbOuvrier int, nbJours int, nbJoie int, nbSante int)
 		// }
 
 		// Le Maire informe les Ouvriers et Citoyens que c'est une nouvelle journée
-		for numOuvrier := 0; numOuvrier < nbOuvrier; numOuvrier++ {
+		for numOuvrier := 0; numOuvrier < nbOuvriers; numOuvrier++ {
 			batiment.Calendrier <- joursActuel
 		}
 
 		//Le Maire attend que les Ouvriers et Citoyens aient fini de travailler pour la journée
-		//time.Sleep(5 * time.Second)
-
 		for {
-			if nbThreadsPret == nbOuvrier {
+			if nbThreadsPret == nbOuvriers {
 				break
 			}
 		}
 		nbThreadsPret = 0
+		//time.Sleep(1 * time.Second)
 
 		// À la fin de la journée, le Maire vérifie si une Ressource Secondaire est à 0, dans quel cas la ville s'effronde
 		if nbJoie <= 0 || nbSante <= 0 {
@@ -101,7 +119,7 @@ func MayorEnd(nbJours int, nbJoie int, nbSante int) {
 			fmt.Println(" car une pandémie a ravagé la ville.")
 		}
 	} else {
-		fmt.Println("La ville se développe jusqu'au jour " + strconv.Itoa(joursActuel) + "et devient auto-suffisante!")
+		fmt.Println("La ville se développe jusqu'au jour " + strconv.Itoa(joursActuel) + " et devient auto-suffisante!")
 	}
 
 	fmt.Println("Le Mayor prend sa retraite avec un budget restant de " + strconv.Itoa(budgetVille) + "$")
@@ -109,7 +127,7 @@ func MayorEnd(nbJours int, nbJoie int, nbSante int) {
 	for i := 0; i < len(batiment.VilleContenu); i++ {
 		fmt.Println(batiment.VilleContenu[i])
 	}
-	nbVisites := NbVisites()
+	nbVisites := GetNbVisites()
 	fmt.Println("La population à utiliser les services offert par la ville " + strconv.Itoa(nbVisites) + " fois")
 }
 
@@ -119,4 +137,22 @@ func GetDateAuj() int {
 
 func IncNbThreadPret() {
 	nbThreadsPret += 1
+}
+
+func IncNbEmployes() {
+	nbEmployes += 1
+	CalculTauxEmploi()
+}
+
+func CalculTauxEmploi() {
+	tauxEmployes = float64(nbEmployes) / float64(nbCitoyens)
+}
+
+func EmbaucheOuvriers(nbNouveauxOuvriers int) {
+	fmt.Println("Le Maire embauche ", nbNouveauxOuvriers, " Ouvriers.")
+	nouveauNbTotalOuvriers := nbOuvriers + nbNouveauxOuvriers
+	for numOuvrier := nbOuvriers; numOuvrier < nouveauNbTotalOuvriers; numOuvrier++ {
+		go Ouvrier(batiment.Complets, batiment.Calendrier, numOuvrier)
+	}
+	nbOuvriers += nbNouveauxOuvriers
 }

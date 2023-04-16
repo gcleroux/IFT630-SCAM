@@ -25,7 +25,7 @@ func main() {
 	}
 
 	fmt.Println("Le Maire est embauché")
-	people.MayorStart(conf.Budget, conf.NbOuvrier, conf.NbJours, conf.NbJoie, conf.NbSante)
+	people.MayorStart(conf.Budget, conf.NbOuvrier, conf.NbJours, conf.NbJoie, conf.NbSante, conf.NbCitoyen)
 
 	people.MayorEnd(conf.NbJours, conf.NbJoie, conf.NbSante)
 
