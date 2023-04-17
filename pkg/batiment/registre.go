@@ -82,17 +82,12 @@ func DemandeTravail(id int) (Projet, error) {
 	}
 
 	// On regarde si l'ouvrier est deja associe a un projet
-	if proj, ok := jobBoardVille.Get(id); ok == nil {
+	if proj, ok := jobBoardVille.Get(id); ok {
 		return proj, nil
 	}
 
 	// On assigne un nouveau projet a l'employe
 	var newProj = projets.Get(rand.Intn(projetsLength))
-	// tentative := 0
-	// for tentative < 5 {
-	// 	if newProj.Batiment.Capacity <
-	// }
-
 	jobBoardVille.Set(id, newProj)
 
 	//TODO: Il serait bien d'utilser capacite dans le batiment pour limiter le nombre d'ouvrier sur un projet
@@ -111,7 +106,7 @@ func CheckWorkDone(t Travail) {
 			if p.Travail >= p.Batiment.Work {
 				jobBoardVille.Delete(p.Id)
 
-				fmt.Println("[REGISTRE]: La construction de", p.Batiment.Name, "est terminée!")
+				fmt.Println("[REGISTRE]: La construction de", p.Batiment.Name, " (", p.Id, ") est terminée!")
 				projets.Delete(idx)
 				batimentsVille.Append(p.Batiment)
 			}
