@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -26,9 +27,18 @@ func main() {
 	//Start le timer
 	start := time.Now()
 
-	// Création des variables qui déterminent le nombre de Goroutines
+	//Set up the Randomiser
+	rand.Seed(time.Now().UnixNano())
+
+	// Création des variables
+	// qui déterminent le nombre de Goroutines
 	var nbOuvriers int = conf.NbOuvrier
 	var nbCitoyens int = conf.NbCitoyen
+	// de statistiques
+	var nbCitoyensPerdus int = 0
+	// de ressources secondaires
+	var tauxJoie int = 50
+	var tauxSante int = 50
 
 	for jour := 1; jour <= conf.NbJour; jour++ {
 		// Le WaitGroup sert a synchroniser toutes les goroutine pour termine proprement une journee
@@ -66,21 +76,63 @@ func main() {
 			go people.CitoyenStep(&wg, i)
 		}
 
-		// De nouveaux ouvriers et citoyens sont potentiellement recruté.
-		// TODO randomly add more Ouvriers and Citoyens.
+		// De nouveaux ouvriers et citoyens sont potentiellement ajoutés
+		if rand.Intn(100) < conf.TauxRecrutementOuvrier { // 0 <= f < 100, donc 10% d'ajouter un ouvrier
+			if nbCitoyens > 0 {
+				nbOuvriers += 1
+				nbCitoyens -= 1
+				fmt.Println("Un citoyen devient un ouvrier.")
+			}
+		}
+		if rand.Intn(100) < conf.TauxNaissance { // 0 <= f < 100, donc 50% d'ajouter un citoyen
+			nbCitoyens += 1
+			fmt.Println("Un citoyen est né dans la métropole.")
+		}
 
 		// On attend que tout le monde dans la ville termine sa journee
 		wg.Wait()
+
+		//Si une Ressource Secondaire est à 0 à la fin d’une journée, quelques citoyens sont perdus.
+		if tauxJoie < 10 {
+			perte := rand.Intn(5) + 1 //1 à 5
+			if nbCitoyens < perte {
+				perte = nbCitoyens
+			}
+			nbCitoyens -= perte
+			nbCitoyensPerdus += perte
+			if perte == 0 {
+				fmt.Println("Le taux de Joie dans la ville est à ", tauxJoie, "%. La ville n'a aucun citoyen a perdre.")
+			} else if perte == 1 {
+				fmt.Println("Le taux de Joie dans la ville est à ", tauxJoie, "%. ", perte, " citoyen est perdu.")
+			} else {
+				fmt.Println("Le taux de Joie dans la ville est à ", tauxJoie, "%. ", perte, " citoyens sont perdus.")
+			}
+		}
+		if tauxSante < 10 {
+			perte := rand.Intn(5) + 1 //2 à 5
+			if nbCitoyens < perte {
+				perte = nbCitoyens
+			}
+			nbCitoyens -= perte
+			nbCitoyensPerdus += perte
+			if perte == 0 {
+				fmt.Println("Le taux de Sante dans la ville est à ", tauxSante, "%. La ville n'a aucun citoyen a perdre.")
+			} else if perte == 1 {
+				fmt.Println("Le taux de Sante dans la ville est à ", tauxSante, "%. ", perte, " citoyen est perdu.")
+			} else {
+				fmt.Println("Le taux de Sante dans la ville est à ", tauxSante, "%. ", perte, " citoyens sont perdus.")
+			}
+		}
 	}
 
-	// Faire un cleanup des channels avec les fcts MayorEnd, CitoyenEnd, etc.
+	// Faire un cleanup des channels avec les fonctions MayorEnd, CitoyenEnd, etc.
 	people.MayorEnd()
 	batiment.RegistreEnd()
 
 	// Calcul du score
 	Score := 0
 	Score += nbCitoyens * 5
-	//Score -= nbCitoyenPerdu*10 //TODO: Implémenter la perte de citoyen si une ressource secondaire atteint 0
+	Score -= nbCitoyensPerdus * 10
 	Score += len(batiment.GetBatiments()) * 20
 	//Score += moyenneJoie //TODO: Implémenter le calcul de la moyenne de la ressource Joie
 	//Score += moyenneSante //TODO: Implémenter le calcul de la moyenne de la ressource Joie
@@ -89,8 +141,9 @@ func main() {
 	fmt.Println()
 	fmt.Println("=== Fin de la simulation ===")
 	fmt.Println("Nombre de jours simulés: ", conf.NbJour)
-	fmt.Println("Nombre final de citoyens: ", nbCitoyens) //TODO: augmenter lorsque de nouveaux citoyens sont ajoutés
-	fmt.Println("Nombre final d'ouvriers: ", nbOuvriers)  //TODO: augmenter lorsque de nouveaux ouvriers sont embauchés
+	fmt.Println("Nombre final d'ouvriers: ", nbOuvriers)
+	fmt.Println("Nombre final de citoyens: ", nbCitoyens)
+	fmt.Println("Nombre de citoyens perdus: ", nbCitoyensPerdus)
 	fmt.Println("Budget restant: ", people.GetBudgetVille())
 	fmt.Println("Nombre de bâtiments construits: ", len(batiment.GetBatiments()))
 	fmt.Println("Liste des batiments dans la ville:")

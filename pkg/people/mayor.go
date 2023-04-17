@@ -37,7 +37,7 @@ func MayorStep(wg *sync.WaitGroup, done <-chan interface{}) {
 		choix := abordables[rand.Intn(len(abordables))]
 		nbProjets++
 		budgetVille -= choix.Price
-		fmt.Println("[MAYOR]: Le maire a demande la construction d'un", choix.Name)
+		fmt.Println("[MAYOR]: Le maire demande la construction d'un", choix.Name)
 		batiment.EnConstruction <- choix
 	}
 
