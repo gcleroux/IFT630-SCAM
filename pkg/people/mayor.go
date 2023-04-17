@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"sync"
+	"time"
 
 	"github.com/gcleroux/IFT630-SCAM/pkg/batiment"
 )
@@ -27,6 +28,7 @@ func MayorInit(budget int) {
 // Le maire fait des demandes de projets si le budget le permet
 func MayorStep(wg *sync.WaitGroup, done <-chan interface{}) {
 	defer wg.Done()
+	rand.Seed(time.Now().UnixNano())
 	// On retrouve la liste des batiments abordables
 	abordables := batiment.GetBatimentsAbordables(budgetVille)
 
