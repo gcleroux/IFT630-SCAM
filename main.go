@@ -58,7 +58,7 @@ func main() {
 
 		wg.Add(conf.NbCitoyen)
 		for i := 0; i < conf.NbCitoyen; i++ {
-			go people.CitoyenStep(&wg)
+			go people.CitoyenStep(&wg, i)
 		}
 
 		// On attend que tout le monde dans la ville termine sa journee
@@ -70,11 +70,18 @@ func main() {
 	people.MayorEnd()
 	batiment.RegistreEnd()
 
-	fmt.Println("Liste des batiments dans la ville")
-	fmt.Println("=================================")
+	fmt.Println()
+	fmt.Println("=== Fin de la simulation ===")
+	fmt.Println("Nombre de jours simulés: ", conf.NbJour)
+	fmt.Println("Nombre final de citoyens: ", conf.NbCitoyen) //TODO: augmenter lorsque de nouveaux citoyens sont ajoutés
+	fmt.Println("Nombre final d'ouvriers: ", conf.NbOuvrier)  //TODO: augmenter lorsque de nouveaux ouvriers sont embauchés
+	fmt.Println("Budget restant: ", people.GetBudgetVille())
+	fmt.Println("Nombre de bâtiments construits: ", len(batiment.GetBatiments()))
+	fmt.Println("Liste des batiments dans la ville:")
 	for _, b := range batiment.GetBatiments() {
 		fmt.Println(b)
 	}
+	fmt.Println("Score: ", 0) //TODO: Implémenter système de score
 
 	fmt.Println("\nTemps total d'exécution du programme:", time.Since(start))
 }

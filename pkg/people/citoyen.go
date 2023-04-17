@@ -13,7 +13,7 @@ func CitoyenInit(nb int) {
 	nbCitoyens = nb
 }
 
-func CitoyenStep(wg *sync.WaitGroup) {
+func CitoyenStep(wg *sync.WaitGroup, id int) {
 	defer wg.Done()
 
 	// On demande au registre quel chantier rejoindre pour la journee
@@ -24,7 +24,7 @@ func CitoyenStep(wg *sync.WaitGroup) {
 		return
 	}
 
-	fmt.Println("Un citoyen visite le batiment,", batiment.Name)
+	fmt.Println("Le citoyen", id, "visite le batiment,", batiment.Name)
 
 	// Envoi des revenus au maire
 	Revenus <- batiment.Income

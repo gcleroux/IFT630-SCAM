@@ -42,6 +42,7 @@ func MayorStep(wg *sync.WaitGroup, done <-chan interface{}) {
 	for {
 		select {
 		case r := <-Revenus:
+			// Revenu peut être négatif
 			budgetVille += r
 		case <-done:
 			// La journee est terminee
@@ -53,4 +54,9 @@ func MayorStep(wg *sync.WaitGroup, done <-chan interface{}) {
 // Fermer les channels
 func MayorEnd() {
 	close(Revenus)
+}
+
+// Get le budgetVille
+func GetBudgetVille() int {
+	return budgetVille
 }
