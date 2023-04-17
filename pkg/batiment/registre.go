@@ -12,14 +12,15 @@ import (
 var TypesBatiments []Batiment = loadBatimentsInfos("./conf/batiments/")
 
 // Batiments contenus dans la ville
-var BatimentsVille []Batiment = []Batiment{}
+var batimentsVille BatimentVille = BatimentVille{BatimentsVille: []Batiment{}}
 
 // Tous les batiments activement en construction
 var idProjet int = 0
-var Projets []Projet = []Projet{}
+
+var projets ProjetVille = ProjetVille{ProjetsVille: []Projet{}}
 
 // On keep track de l'assignation des ouvriers
-var jobBoard map[int]Projet = make(map[int]Projet)
+var jobBoard sync.Map
 
 // Channels
 var EnConstruction = make(chan Batiment)
@@ -33,7 +34,7 @@ func RegistreStep(wg *sync.WaitGroup, done <-chan interface{}) {
 		select {
 		case b := <-EnConstruction:
 			// On ajoute la demande du maire au projet en cours
-			Projets = append(Projets, Projet{idProjet, b, 0})
+			projets.Append(Projet{idProjet, b, 0})
 			idProjet++
 		case t := <-JourneeTravail:
 			CheckWorkDone(t)
@@ -68,44 +69,47 @@ func GetBatimentsAbordables(budget int) []Batiment {
 }
 
 func DemandeTravail(id int) (Projet, error) {
-	if len(Projets) == 0 {
+	projetsLength := projets.Length()
+	if projetsLength == 0 {
 		return Projet{}, errors.New("Pas de projet en cours")
 	}
 
 	// On regarde si l'ouvrier est deja associe a un projet
-	proj, ok := jobBoard[id]
-
-	if ok {
-		// L'ouvrier est deja sur un projet
+	var proj Projet
+	if value, ok := jobBoard.Load(id); ok {
+		proj = value.(Projet)
 		return proj, nil
 	}
 
 	// On assigne un nouveau projet a l'employe
-	jobBoard[id] = Projets[rand.Intn(len(Projets))]
+	var newProj = projets.Get(rand.Intn(projetsLength))
+	jobBoard.Store(id, newProj)
 
 	//TODO: Il serait bien d'utilser capacite dans le batiment pour limiter le nombre d'ouvrier sur un projet
-	return jobBoard[id], nil
+	return newProj, nil
 }
 
 func CheckWorkDone(t Travail) {
 	//TODO: Maintenant qu'on a un jobBoard, on devrait plutot acceder au projet de cette facon
-	for idx, p := range Projets {
+	for idx, p := range projets.GetAll() {
 		if p.Id == t.Id {
 			// On ajoute le travail de l'ouvrier au projet
 			p.Travail += t.Effort
-			Projets[idx] = p
+			projets.Set(idx, p)
 
 			// Le batiment est complete, on l'enleve des projets pour le mettre dans les complets
 			if p.Travail >= p.Batiment.Work {
-				// On enleve les jobs associe au projet
-				for k, v := range jobBoard {
-					if v.Id == p.Id {
-						delete(jobBoard, k)
+				jobBoard.Range(func(k, v interface{}) bool {
+					proj, ok := v.(Projet)
+					if ok && proj.Id == p.Id {
+						jobBoard.Delete(k)
 					}
-				}
+					return true
+				})
+
 				fmt.Println("[REGISTRE]: La construction de", p.Batiment.Name, "est terminée!")
-				Projets = append(Projets[:idx], Projets[idx+1:]...)
-				BatimentsVille = append(BatimentsVille, p.Batiment)
+				projets.Delete(idx)
+				batimentsVille.Append(p.Batiment)
 			}
 
 		}
@@ -113,11 +117,12 @@ func CheckWorkDone(t Travail) {
 }
 
 func VisiteBatiment() (Batiment, error) {
-	if len(BatimentsVille) == 0 {
+	batimentsLength := batimentsVille.Length()
+	if batimentsLength == 0 {
 		return Batiment{}, errors.New("Pas de batiment dans la ville")
 	}
 	//TODO: Prendre en compte la capacite des batiments
-	batiment := BatimentsVille[rand.Intn(len(BatimentsVille))]
+	batiment := batimentsVille.GetIndex(rand.Intn(batimentsLength))
 
 	// On retourne un batiment a visiter au hasard
 	return batiment, nil
