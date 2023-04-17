@@ -4,14 +4,15 @@ import (
 	"sync"
 )
 
-// JobBoard contient un sync.Map qui gère la concurrence entre les threads
+// JobBoard contient une map de tous les ouvrier et à quel projet ils sont assignés
+// Utilise un sync.Map qui gère la concurrence entre les threads
 type JobBoard struct {
-	data sync.Map
+	projetBoard sync.Map
 }
 
 // Retourne le projet associé à l'index
 func (board *JobBoard) Get(index int) (Projet, bool) {
-	if value, ok := board.data.Load(index); ok {
+	if value, ok := board.projetBoard.Load(index); ok {
 		proj := value.(Projet)
 		return proj, true
 	}
@@ -20,16 +21,15 @@ func (board *JobBoard) Get(index int) (Projet, bool) {
 
 // Change la valeur de l'élément index au projet en paramètre
 func (board *JobBoard) Set(index int, proj Projet) {
-	board.data.Store(index, proj)
+	board.projetBoard.Store(index, proj)
 }
 
-// Supprimer un projet du board selon l'index indiqué
+// Supprimer les tâches d'ouvrier associé à un projet
 func (board *JobBoard) Delete(index int) {
-	board.data.Range(func(key, value interface{}) bool {
+	board.projetBoard.Range(func(key, value interface{}) bool {
 		proj, ok := value.(Projet)
 		if ok && proj.Id == index {
-			board.data.Delete(key)
-			return false
+			board.projetBoard.Delete(key)
 		}
 		return true
 	})

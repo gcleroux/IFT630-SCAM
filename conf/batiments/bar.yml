@@ -4,4 +4,5 @@ name: "Bar"
 price: 150
 work: 25
 capacity: 25
+workercapacity: 5
 income: 10

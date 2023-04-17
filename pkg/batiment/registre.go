@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"math/rand"
 	"sync"
 )
 
@@ -12,12 +11,13 @@ import (
 var TypesBatiments []Batiment = loadBatimentsInfos("./conf/batiments/")
 
 // Batiments contenus dans la ville
-var batimentsVille BatimentVille = BatimentVille{BatimentsVille: []Batiment{}}
+var batimentsVille BatimentVille = BatimentVille{batimentsVille: []Batiment{}}
 
 // Tous les batiments activement en construction
 var idProjet int = 0
 
-var projets ProjetVille = ProjetVille{ProjetsVille: []Projet{}}
+// Les projets contenus dans la ville
+var projets ProjetVille = ProjetVille{projetsVille: []Projet{}}
 
 // On keep track de l'assignation des ouvriers
 var jobBoardVille JobBoard
@@ -34,7 +34,7 @@ func RegistreStep(wg *sync.WaitGroup, done <-chan interface{}) {
 		select {
 		case b := <-EnConstruction:
 			// On ajoute la demande du maire au projet en cours
-			projets.Append(Projet{idProjet, b, 0})
+			projets.Append(Projet{idProjet, b, 0, 0})
 			idProjet++
 		case t := <-JourneeTravail:
 			CheckWorkDone(t)
@@ -76,8 +76,7 @@ func GetBatimentsAbordables(budget int) []Batiment {
 
 // Assigne un projet à un ouvrier, s'il n'est pas déjà sur un autre projet
 func DemandeTravail(id int) (Projet, error) {
-	projetsLength := projets.Length()
-	if projetsLength == 0 {
+	if projets.Length() == 0 {
 		return Projet{}, errors.New("Pas de projet en cours")
 	}
 
@@ -86,14 +85,20 @@ func DemandeTravail(id int) (Projet, error) {
 		return proj, nil
 	}
 
-	// On assigne un nouveau projet a l'employe
-	var newProj = projets.Get(rand.Intn(projetsLength))
-	jobBoardVille.Set(id, newProj)
+	// On assigne un nouveau projet a l'ouvrier, s'il a un emploi de disponible
+	newProj, err := projets.FindWork(id, jobBoardVille)
 
-	//TODO: Il serait bien d'utilser capacite dans le batiment pour limiter le nombre d'ouvrier sur un projet
+	if err != nil {
+		return Projet{}, err
+	}
+
 	return newProj, nil
 }
 
+// Boucle sur tous les projets en cours et met à jout les projets en cours
+//   - Ajoute le travail accompli durant la journée par les travailleurs
+//   - Si un projet est terminé, il est retirer des projets en cours et les projet associés au travailleur dans
+//     le jobBoard sont supprimés et ajoute dans les batiments de la ville.
 func CheckWorkDone(t Travail) {
 	//TODO: Maintenant qu'on a un jobBoard, on devrait plutot acceder au projet de cette facon
 	for idx, p := range projets.GetAll() {
@@ -106,7 +111,7 @@ func CheckWorkDone(t Travail) {
 			if p.Travail >= p.Batiment.Work {
 				jobBoardVille.Delete(p.Id)
 
-				fmt.Println("[REGISTRE]: La construction de", p.Batiment.Name, " (", p.Id, ") est terminée!")
+				fmt.Println("[REGISTRE]: La construction de", p.Batiment.Name, p.Id, "est terminée!")
 				projets.Delete(idx)
 				batimentsVille.Append(p.Batiment)
 			}
@@ -120,8 +125,13 @@ func VisiteBatiment() (Batiment, error) {
 	if batimentsLength == 0 {
 		return Batiment{}, errors.New("Pas de batiment dans la ville")
 	}
-	//TODO: Prendre en compte la capacite des batiments
-	batiment := batimentsVille.Get(rand.Intn(batimentsLength))
+
+	// Le citoyen visite un batiment
+	batiment, err := batimentsVille.Visite()
+
+	if err != nil {
+		return Batiment{}, err
+	}
 
 	// On retourne un batiment a visiter au hasard
 	return batiment, nil
