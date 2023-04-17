@@ -20,7 +20,7 @@ var idProjet int = 0
 var projets ProjetVille = ProjetVille{ProjetsVille: []Projet{}}
 
 // On keep track de l'assignation des ouvriers
-var jobBoard sync.Map
+var jobBoardVille JobBoard
 
 // Channels
 var EnConstruction = make(chan Batiment)
@@ -74,6 +74,7 @@ func GetBatimentsAbordables(budget int) []Batiment {
 	return res
 }
 
+// Assigne un projet à un ouvrier, s'il n'est pas déjà sur un autre projet
 func DemandeTravail(id int) (Projet, error) {
 	projetsLength := projets.Length()
 	if projetsLength == 0 {
@@ -81,15 +82,18 @@ func DemandeTravail(id int) (Projet, error) {
 	}
 
 	// On regarde si l'ouvrier est deja associe a un projet
-	var proj Projet
-	if value, ok := jobBoard.Load(id); ok {
-		proj = value.(Projet)
+	if proj, ok := jobBoardVille.Get(id); ok == nil {
 		return proj, nil
 	}
 
 	// On assigne un nouveau projet a l'employe
 	var newProj = projets.Get(rand.Intn(projetsLength))
-	jobBoard.Store(id, newProj)
+	// tentative := 0
+	// for tentative < 5 {
+	// 	if newProj.Batiment.Capacity <
+	// }
+
+	jobBoardVille.Set(id, newProj)
 
 	//TODO: Il serait bien d'utilser capacite dans le batiment pour limiter le nombre d'ouvrier sur un projet
 	return newProj, nil
@@ -105,13 +109,7 @@ func CheckWorkDone(t Travail) {
 
 			// Le batiment est complete, on l'enleve des projets pour le mettre dans les complets
 			if p.Travail >= p.Batiment.Work {
-				jobBoard.Range(func(k, v interface{}) bool {
-					proj, ok := v.(Projet)
-					if ok && proj.Id == p.Id {
-						jobBoard.Delete(k)
-					}
-					return true
-				})
+				jobBoardVille.Delete(p.Id)
 
 				fmt.Println("[REGISTRE]: La construction de", p.Batiment.Name, "est terminée!")
 				projets.Delete(idx)
@@ -134,6 +132,7 @@ func VisiteBatiment() (Batiment, error) {
 	return batiment, nil
 }
 
+// Retourne la liste des batiments de la ville
 func GetBatiments() []Batiment {
 	return batimentsVille.GetAll()
 }
