@@ -48,3 +48,8 @@ func MayorStep(wg *sync.WaitGroup, done <-chan interface{}) {
 		}
 	}
 }
+
+// Fermer les channels
+func MayorEnd() {
+	close(Revenus)
+}

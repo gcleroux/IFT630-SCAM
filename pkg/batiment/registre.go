@@ -45,6 +45,12 @@ func RegistreStep(wg *sync.WaitGroup, done <-chan interface{}) {
 	}
 }
 
+// Fermer les channels
+func RegistreEnd() {
+	close(EnConstruction)
+	close(JourneeTravail)
+}
+
 // Trouve le prix le moins cher des batiments de la ville
 func TrouveBatimentMoinsCher() int {
 	min := math.MaxInt

@@ -66,7 +66,9 @@ func main() {
 
 	}
 
-	//TODO: Faire un cleanup des channels avec les fcts MayorEnd, CitoyenEnd, etc.
+	// Faire un cleanup des channels avec les fcts MayorEnd, CitoyenEnd, etc.
+	people.MayorEnd()
+	batiment.RegistreEnd()
 
 	fmt.Println("Liste des batiments dans la ville")
 	fmt.Println("=================================")
