@@ -4,4 +4,5 @@ name: "Parc"
 price: 250
 work: 20
 capacity: 25
+workercapacity: 2
 income: 0

@@ -4,4 +4,5 @@ name: "Hopital"
 price: 500
 work: 50
 capacity: 100
+workercapacity: 10
 income: -10

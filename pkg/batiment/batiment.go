@@ -13,23 +13,26 @@ import (
 )
 
 type Batiment struct {
-	Id       int    `yaml:"id"`
-	Name     string `yaml:"name"`
-	Price    int    `yaml:price`
-	Work     int    `yaml:work`
-	Capacity int    `yaml:capacity`
-	Income   int    `yaml:income`
+	Id             int    `yaml:"id"`           // Identifiant
+	Name           string `yaml:"name"`         // Nom
+	Price          int    `yaml:price`          // Coût de construction
+	Work           int    `yaml:work`           // Travail requis pour construire
+	Capacity       int    `yaml:capacity`       // Nombre de visiteur maximal
+	WorkerCapacity int    `yaml:workercapacity` // Nombre d'ouvrier maximal pour construire
+	Income         int    `yaml:income`         // Revenu
+	Visitors       int    // Nombre de visiteur dans le batiment
 }
 
 type Projet struct {
-	Id       int
-	Batiment Batiment
-	Travail  int
+	Id       int      // Identifiant
+	Batiment Batiment // Batiment associé au projet
+	Travail  int      // Travail accompli de la construction
+	Capacity int      // Nombre d'ouvrier travaillant sur le chantier
 }
 
 type Travail struct {
-	Id     int
-	Effort int
+	Id     int // Identifiant du projet de ce travail
+	Effort int // Effort de travail fait par l'employer
 }
 
 // Load les infos des batiments a partir des fichiers YAML

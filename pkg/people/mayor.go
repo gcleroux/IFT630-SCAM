@@ -24,6 +24,7 @@ func MayorInit(budget int) {
 	budgetVille = budget
 }
 
+// Le maire fait des demandes de projets si le budget le permet
 func MayorStep(wg *sync.WaitGroup, done <-chan interface{}) {
 	defer wg.Done()
 	// On retrouve la liste des batiments abordables

@@ -16,6 +16,7 @@ func OuvrierInit(nb int, travail int) {
 	travailOuvrier = travail
 }
 
+// Un ouvrier fait une demande de travail pour la journée et signal au régistre lorsqu'il a terminé.
 func OuvrierStep(wg *sync.WaitGroup, id int) {
 	defer wg.Done()
 
@@ -24,12 +25,13 @@ func OuvrierStep(wg *sync.WaitGroup, id int) {
 
 	if err != nil {
 		// On a pas de travail a faire pour la journee
+		fmt.Println("L'ouvrier", id, "n'a pas de travaille pour la journée")
 		return
 	}
 
-	fmt.Println("Un ouvrier travaille sur le chantier du ", job.Batiment.Name)
+	fmt.Println("L'ouvrier", id, "travaille sur le chantier du ", job.Batiment.Name)
 
 	// On signale au registre qu'on a terminé pour la journee
-	work := batiment.Travail{job.Id, travailOuvrier}
+	work := batiment.Travail{Id: job.Id, Effort: travailOuvrier}
 	batiment.JourneeTravail <- work
 }
