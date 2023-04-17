@@ -122,8 +122,12 @@ func VisiteBatiment() (Batiment, error) {
 		return Batiment{}, errors.New("Pas de batiment dans la ville")
 	}
 	//TODO: Prendre en compte la capacite des batiments
-	batiment := batimentsVille.GetIndex(rand.Intn(batimentsLength))
+	batiment := batimentsVille.Get(rand.Intn(batimentsLength))
 
 	// On retourne un batiment a visiter au hasard
 	return batiment, nil
+}
+
+func GetBatiments() []Batiment {
+	return batimentsVille.GetAll()
 }

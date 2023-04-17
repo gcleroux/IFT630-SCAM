@@ -70,7 +70,7 @@ func main() {
 
 	fmt.Println("Liste des batiments dans la ville")
 	fmt.Println("=================================")
-	for _, b := range batiment.GetBatimentAll() {
+	for _, b := range batiment.GetBatiments() {
 		fmt.Println(b)
 	}
 

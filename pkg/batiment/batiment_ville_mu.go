@@ -21,13 +21,13 @@ func (batiments *BatimentVille) Length() int {
 	return len(batiments.BatimentsVille)
 }
 
-func (batiments *BatimentVille) GetIndex(index int) Batiment {
+func (batiments *BatimentVille) Get(index int) Batiment {
 	batiments.BatimentsVilleMutex.RLock()
 	defer batiments.BatimentsVilleMutex.RUnlock()
 	return batiments.BatimentsVille[index]
 }
 
-func GetBatimentAll() []Batiment {
+func (batiments *BatimentVille) GetAll() []Batiment {
 	batimentsVille.BatimentsVilleMutex.RLock()
 	defer batimentsVille.BatimentsVilleMutex.RUnlock()
 	return batimentsVille.BatimentsVille
