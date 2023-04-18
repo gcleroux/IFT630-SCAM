@@ -5,3 +5,5 @@ travailOuvriers: 5
 nbCitoyens: 5
 nbJours: 120
 dayTime: 1
+tauxRecrutementOuvrier: 10
+tauxNaissance: 50
