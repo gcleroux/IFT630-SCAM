@@ -25,7 +25,7 @@ func OuvrierStep(wg *sync.WaitGroup, id int) {
 
 	if err != nil {
 		// On a pas de travail a faire pour la journee
-		fmt.Println("L'ouvrier", id, "n'a pas de travaille pour la journée")
+		fmt.Println("L'ouvrier", id, "n'a pas de travail pour la journée")
 		return
 	}
 
