@@ -36,6 +36,8 @@ func main() {
 	var nbCitoyens int = conf.NbCitoyen
 	// de statistiques
 	var nbCitoyensPerdus int = 0
+	var totalJoie int = 0
+	var totalSante int = 0
 	// de ressources secondaires
 	var tauxJoie int = 50
 	var tauxSante int = 50
@@ -43,6 +45,10 @@ func main() {
 	for jour := 1; jour <= conf.NbJour; jour++ {
 		// Le WaitGroup sert a synchroniser toutes les goroutine pour termine proprement une journee
 		var wg sync.WaitGroup
+
+		// Calcul des moyenens de Joie et Sante pour fin de partie
+		totalJoie += tauxJoie
+		totalSante += tauxSante
 
 		// Affichage de la journee
 		fmt.Printf("\nJour #%d\n=========\n", jour)
@@ -89,6 +95,25 @@ func main() {
 			fmt.Println("Un citoyen est né dans la métropole.")
 		}
 
+		// À chaque soir, la joie et sante diminue aléatoirement
+		perte := rand.Intn(nbCitoyens + 1) // 0 <= f <= nbCitoyen
+		if perte > 10 {
+			perte = 10
+		}
+		if tauxJoie < perte {
+			perte = tauxJoie
+		}
+		tauxJoie -= perte
+
+		perte = rand.Intn(nbCitoyens + 1) // 0 <= f <= nbCitoyen
+		if perte > 10 {
+			perte = 10
+		}
+		if tauxSante < perte {
+			perte = tauxSante
+		}
+		tauxSante -= perte
+
 		// On attend que tout le monde dans la ville termine sa journee
 		wg.Wait()
 
@@ -134,8 +159,8 @@ func main() {
 	Score += nbCitoyens * 5
 	Score -= nbCitoyensPerdus * 10
 	Score += len(batiment.GetBatiments()) * 20
-	//Score += moyenneJoie //TODO: Implémenter le calcul de la moyenne de la ressource Joie
-	//Score += moyenneSante //TODO: Implémenter le calcul de la moyenne de la ressource Joie
+	Score += totalJoie / conf.NbJour
+	Score += totalSante / conf.NbJour
 	Score += people.GetBudgetVille() / 100
 
 	fmt.Println()
@@ -144,6 +169,8 @@ func main() {
 	fmt.Println("Nombre final d'ouvriers: ", nbOuvriers)
 	fmt.Println("Nombre final de citoyens: ", nbCitoyens)
 	fmt.Println("Nombre de citoyens perdus: ", nbCitoyensPerdus)
+	fmt.Println("Moyenne de joie: ", totalJoie/conf.NbJour)
+	fmt.Println("Moyenne de sante: ", totalSante/conf.NbJour)
 	fmt.Println("Budget restant: ", people.GetBudgetVille())
 	fmt.Println("Nombre de bâtiments construits: ", len(batiment.GetBatiments()))
 	fmt.Println("Liste des batiments dans la ville:")
