@@ -40,6 +40,7 @@ func RegistreStep(wg *sync.WaitGroup, done <-chan interface{}) {
 			CheckWorkDone(t)
 		case <-done:
 			// La journee est terminee
+			batimentsVille.ResetVisites()
 			return
 		}
 	}

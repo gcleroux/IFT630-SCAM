@@ -1,8 +1,9 @@
 package batiment
 
 import (
-	"errors"
+	"math/rand"
 	"sync"
+	"time"
 )
 
 // Structure d'exclusion mutuelle read/write pour gérer les batiments de la ville qui sont une partagés par différents threads.
@@ -42,11 +43,23 @@ func (batiments *BatimentVille) GetAll() []Batiment {
 
 // Trouve un emploi à un citoyen dans un batiment de la ville
 func (batiments *BatimentVille) Visite() (Batiment, error) {
+
+	//Temporary fix:
+	rand.Seed(time.Now().UnixNano())
+	return batiments.Get(rand.Intn(batiments.Length())), nil
+
+	//TODO: batiment.Visitors++ ne fonctionne pas. Le compteur reste à 1 est tous les citoyens vont travailler dans le même bâtiment.
+	// for _, batiment := range batiments.batimentsVille {
+	// 	if batiment.Visitors < batiment.Capacity {
+	// 		batiment.Visitors++
+	// 		return batiment, nil
+	// 	}
+	// }
+	//return Batiment{}, errors.New("Pas de batiment disponible")
+}
+
+func (batiments *BatimentVille) ResetVisites() {
 	for _, batiment := range batiments.batimentsVille {
-		if batiment.Visitors < batiment.Capacity {
-			// batiment.Visitors++	// TODO: Est-ce que les citoyens visite le batiment ou il se trouve un emploi permanent ?
-			return batiment, nil
-		}
+		batiment.Visitors = 0
 	}
-	return Batiment{}, errors.New("Pas de batiment disponible")
 }

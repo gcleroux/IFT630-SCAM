@@ -16,9 +16,13 @@ func MayorHello() string {
 // Attributs propres au maire de la ville
 var nbProjets int
 var budgetVille int
+var joieJournaliere float64
+var santeJournaliere float64
 
 // Channels
 var Revenus = make(chan int)
+var Joie = make(chan float64)
+var Sante = make(chan float64)
 
 func MayorInit(budget int) {
 	nbProjets = 0
@@ -41,11 +45,19 @@ func MayorStep(wg *sync.WaitGroup, done <-chan interface{}) {
 		batiment.EnConstruction <- choix
 	}
 
+	// Reset journalière à 0 des ressources secondaires
+	joieJournaliere = 0.0
+	santeJournaliere = 0.0
+
 	for {
 		select {
 		case r := <-Revenus:
 			// Revenu peut être négatif
 			budgetVille += r
+		case j := <-Joie:
+			joieJournaliere += j
+		case s := <-Sante:
+			santeJournaliere += s
 		case <-done:
 			// La journee est terminee
 			return
@@ -61,4 +73,14 @@ func MayorEnd() {
 // Get le budgetVille
 func GetBudgetVille() int {
 	return budgetVille
+}
+
+// Get la joieJournaliere
+func GetJoieJournaliere() float64 {
+	return joieJournaliere
+}
+
+// Get la santeJournaliere
+func GetSanteJournaliere() float64 {
+	return santeJournaliere
 }
