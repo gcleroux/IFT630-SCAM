@@ -39,6 +39,8 @@ func main() {
 	// de ressources secondaires
 	var tauxJoie int = 50
 	var tauxSante int = 50
+	var avgJoie int = 0
+	var avgSante int = 0
 
 	for jour := 1; jour <= conf.NbJour; jour++ {
 		// Le WaitGroup sert a synchroniser toutes les goroutine pour termine proprement une journee
@@ -71,11 +73,6 @@ func main() {
 			go people.OuvrierStep(&wg, i)
 		}
 
-		wg.Add(nbCitoyens)
-		for i := 0; i < nbCitoyens; i++ {
-			go people.CitoyenStep(&wg, i)
-		}
-
 		// De nouveaux ouvriers et citoyens sont potentiellement ajoutés
 		if rand.Intn(100) < conf.TauxRecrutementOuvrier { // 0 <= f < 100, donc 10% d'ajouter un ouvrier
 			if nbCitoyens > 0 {
@@ -90,11 +87,50 @@ func main() {
 		}
 
 		// On attend que tout le monde dans la ville termine sa journee
-		wg.Wait()
 
+		var dropProbability int = 3
+		var daysSinceLastDrop int = 0
+		var joieSanteGain func() = func() {
+
+			if daysSinceLastDrop >= 3 && rand.Intn(100) < dropProbability {
+
+				tauxJoie = rand.Intn(6) + 5
+				tauxSante = rand.Intn(6) + 5
+				daysSinceLastDrop = 0
+			} else {
+				// On incrémente le compteur si pas de chute drastique récemment.
+				if daysSinceLastDrop < 3 {
+					daysSinceLastDrop++
+				}
+
+				// Sinon, on ajuste le niveau de sante et de joie vers ~80 TODO finetune
+				if tauxJoie < 150 {
+					tauxJoie += rand.Intn(4) + 1
+					avgJoie += (rand.Intn(4) + 1)
+				} else if tauxJoie > 80 {
+					tauxJoie -= rand.Intn(4) + 1
+					avgJoie -= (rand.Intn(4) + 1)
+				}
+
+				if tauxSante < 150 {
+					tauxSante += rand.Intn(4) + 1
+					avgSante += (rand.Intn(4) + 1)
+				} else if tauxSante > 80 {
+					tauxSante -= rand.Intn(4) + 1
+					avgSante -= (rand.Intn(4) + 1)
+				}
+			}
+		}
+
+		wg.Add(nbCitoyens)
+		for i := 0; i < nbCitoyens; i++ {
+			go people.CitoyenStep(&wg, i, joieSanteGain)
+		}
+
+		wg.Wait()
 		//Si une Ressource Secondaire est à 0 à la fin d’une journée, quelques citoyens sont perdus.
 		if tauxJoie < 10 {
-			perte := rand.Intn(5) + 1 //1 à 5
+			perte := rand.Intn(1) + 1 // 1 à 2
 			if nbCitoyens < perte {
 				perte = nbCitoyens
 			}
@@ -109,7 +145,7 @@ func main() {
 			}
 		}
 		if tauxSante < 10 {
-			perte := rand.Intn(5) + 1 //2 à 5
+			perte := rand.Intn(1) + 1 //1 à 2
 			if nbCitoyens < perte {
 				perte = nbCitoyens
 			}
@@ -134,8 +170,8 @@ func main() {
 	Score += nbCitoyens * 5
 	Score -= nbCitoyensPerdus * 10
 	Score += len(batiment.GetBatiments()) * 20
-	//Score += moyenneJoie //TODO: Implémenter le calcul de la moyenne de la ressource Joie
-	//Score += moyenneSante //TODO: Implémenter le calcul de la moyenne de la ressource Joie
+	Score += avgJoie / conf.NbJour  //TODO: Implémenter le calcul de la moyenne de la ressource Joie
+	Score += avgSante / conf.NbJour //TODO: Implémenter le calcul de la moyenne de la ressource Joie
 	Score += people.GetBudgetVille() / 100
 
 	fmt.Println()
@@ -144,6 +180,8 @@ func main() {
 	fmt.Println("Nombre final d'ouvriers: ", nbOuvriers)
 	fmt.Println("Nombre final de citoyens: ", nbCitoyens)
 	fmt.Println("Nombre de citoyens perdus: ", nbCitoyensPerdus)
+	fmt.Println("Taux moyen de joie : ", avgJoie/conf.NbJour, "%")
+	fmt.Println("Taux moyen de santé : ", avgSante/conf.NbJour, "%")
 	fmt.Println("Budget restant: ", people.GetBudgetVille())
 	fmt.Println("Nombre de bâtiments construits: ", len(batiment.GetBatiments()))
 	fmt.Println("Liste des batiments dans la ville:")
