@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"math/rand"
 	"sync"
 	"time"
@@ -36,13 +37,19 @@ func main() {
 	var nbCitoyens int = conf.NbCitoyen
 	// de statistiques
 	var nbCitoyensPerdus int = 0
+	var totalJoie float64 = 0
+	var totalSante float64 = 0
 	// de ressources secondaires
-	var tauxJoie int = 50
-	var tauxSante int = 50
+	var tauxJoie float64 = 50
+	var tauxSante float64 = 50
 
 	for jour := 1; jour <= conf.NbJour; jour++ {
 		// Le WaitGroup sert a synchroniser toutes les goroutine pour termine proprement une journee
 		var wg sync.WaitGroup
+
+		// Calcul des moyenens de Joie et Sante pour fin de partie
+		totalJoie += tauxJoie
+		totalSante += tauxSante
 
 		// Affichage de la journee
 		fmt.Printf("\nJour #%d\n=========\n", jour)
@@ -84,24 +91,61 @@ func main() {
 				fmt.Println("Un citoyen devient un ouvrier.")
 			}
 		}
-		if rand.Intn(100) < conf.TauxNaissance { // 0 <= f < 100, donc 50% d'ajouter un citoyen
-			nbCitoyens += 1
-			fmt.Println("Un citoyen est né dans la métropole.")
+		for i := 0.0; i < math.Ceil(float64(nbCitoyens)/5); i++ {
+			if rand.Intn(100) < conf.TauxNaissance { // 0 <= f < 100, donc 50% d'ajouter un citoyen
+				nbCitoyens += 1
+				fmt.Println("Un citoyen est né dans la métropole.")
+			}
 		}
 
 		// On attend que tout le monde dans la ville termine sa journee
 		wg.Wait()
 
+		// On additionne la joie et sante généré par les citoyens aujourd'hui
+		tauxJoie += float64(people.GetJoieJournaliere())
+		if tauxJoie >= 100 {
+			tauxJoie = 100
+		} else if tauxJoie < 0 {
+			tauxJoie = 0
+		}
+		tauxSante += float64(people.GetSanteJournaliere())
+		if tauxSante >= 100 {
+			tauxSante = 100
+		} else if tauxSante < 0 {
+			tauxSante = 0
+		}
+
+		// À chaque soir, la joie et sante diminue aléatoirement
+		nbr := rand.Intn(nbCitoyens + 1) // 0 <= f <= nbCitoyen
+		perte := float64(nbr) / 10.0
+		if perte > 10 {
+			perte = 10
+		}
+		if tauxJoie < perte {
+			perte = tauxJoie
+		}
+		tauxJoie -= perte
+
+		nbr = rand.Intn(nbCitoyens + 1) // 0 <= f <= nbCitoyen
+		perte = float64(nbr) / 10.0
+		if perte > 10 {
+			perte = 10
+		}
+		if tauxSante < perte {
+			perte = tauxSante
+		}
+		tauxSante -= perte
+
 		//Si une Ressource Secondaire est à 0 à la fin d’une journée, quelques citoyens sont perdus.
 		if tauxJoie < 10 {
-			perte := rand.Intn(5) + 1 //1 à 5
+			perte := rand.Intn(6) //0 à 5
 			if nbCitoyens < perte {
 				perte = nbCitoyens
 			}
 			nbCitoyens -= perte
 			nbCitoyensPerdus += perte
 			if perte == 0 {
-				fmt.Println("Le taux de Joie dans la ville est à ", tauxJoie, "%. La ville n'a aucun citoyen a perdre.")
+				fmt.Println("Le taux de Joie dans la ville est à ", tauxJoie, "%. La ville ne perd pas de citoyen.")
 			} else if perte == 1 {
 				fmt.Println("Le taux de Joie dans la ville est à ", tauxJoie, "%. ", perte, " citoyen est perdu.")
 			} else {
@@ -134,8 +178,8 @@ func main() {
 	Score += nbCitoyens * 5
 	Score -= nbCitoyensPerdus * 10
 	Score += len(batiment.GetBatiments()) * 20
-	//Score += moyenneJoie //TODO: Implémenter le calcul de la moyenne de la ressource Joie
-	//Score += moyenneSante //TODO: Implémenter le calcul de la moyenne de la ressource Joie
+	Score += int(totalJoie) / conf.NbJour
+	Score += int(totalSante) / conf.NbJour
 	Score += people.GetBudgetVille() / 100
 
 	fmt.Println()
@@ -144,6 +188,8 @@ func main() {
 	fmt.Println("Nombre final d'ouvriers: ", nbOuvriers)
 	fmt.Println("Nombre final de citoyens: ", nbCitoyens)
 	fmt.Println("Nombre de citoyens perdus: ", nbCitoyensPerdus)
+	fmt.Println("Moyenne de joie: ", totalJoie/float64(conf.NbJour))
+	fmt.Println("Moyenne de sante: ", totalSante/float64(conf.NbJour))
 	fmt.Println("Budget restant: ", people.GetBudgetVille())
 	fmt.Println("Nombre de bâtiments construits: ", len(batiment.GetBatiments()))
 	fmt.Println("Liste des batiments dans la ville:")

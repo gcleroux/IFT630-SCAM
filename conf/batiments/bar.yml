@@ -3,6 +3,8 @@ id: 4
 name: "Bar"
 price: 150
 work: 25
-capacity: 25
+capacity: 5
 workercapacity: 5
 income: 10
+generationjoie: 0.3
+generationsante: -0.1

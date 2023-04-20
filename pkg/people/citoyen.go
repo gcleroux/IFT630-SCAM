@@ -26,6 +26,8 @@ func CitoyenStep(wg *sync.WaitGroup, id int) {
 
 	fmt.Println("Le citoyen", id, "visite le batiment,", batiment.Name)
 
-	// Envoi des revenus au maire
+	// Envoi des ressources au maire
 	Revenus <- batiment.Income
+	Joie <- batiment.GenerationJoie
+	Sante <- batiment.GenerationSante
 }

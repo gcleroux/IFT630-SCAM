@@ -3,6 +3,8 @@ id: 2
 name: "Hopital"
 price: 500
 work: 50
-capacity: 100
+capacity: 15
 workercapacity: 10
 income: -10
+generationjoie: -0.1
+generationsante: 0.5

@@ -13,14 +13,16 @@ import (
 )
 
 type Batiment struct {
-	Id             int    `yaml:"id"`           // Identifiant
-	Name           string `yaml:"name"`         // Nom
-	Price          int    `yaml:price`          // Coût de construction
-	Work           int    `yaml:work`           // Travail requis pour construire
-	Capacity       int    `yaml:capacity`       // Nombre de visiteur maximal
-	WorkerCapacity int    `yaml:workercapacity` // Nombre d'ouvrier maximal pour construire
-	Income         int    `yaml:income`         // Revenu
-	Visitors       int    // Nombre de visiteur dans le batiment
+	Id              int     `yaml:"id"`            // Identifiant
+	Name            string  `yaml:"name"`          // Nom
+	Price           int     `yaml:price`           // Coût de construction
+	Work            int     `yaml:work`            // Travail requis pour construire
+	Capacity        int     `yaml:capacity`        // Nombre de visiteur maximal
+	WorkerCapacity  int     `yaml:workercapacity`  // Nombre d'ouvrier maximal pour construire
+	Income          int     `yaml:income`          // Revenu
+	GenerationJoie  float64 `yaml:generationjoie`  // Joie généré par citoyen par jour
+	GenerationSante float64 `yaml:generationsante` // Sante généré par citoyen par jour
+	Visitors        int     // Nombre de visiteur dans le batiment
 }
 
 type Projet struct {
