@@ -10,27 +10,36 @@ type JobBoard struct {
 	projetBoard sync.Map
 }
 
-// Retourne le projet associé à l'index
-func (board *JobBoard) Get(index int) (Projet, bool) {
-	if value, ok := board.projetBoard.Load(index); ok {
+// Retourne le projet associé à un ouvrier
+func (board *JobBoard) GetProjet(idOuvrier int) (Projet, bool) {
+	if value, ok := board.projetBoard.Load(idOuvrier); ok {
 		proj := value.(Projet)
 		return proj, true
 	}
 	return Projet{}, false
 }
 
-// Change la valeur de l'élément index au projet en paramètre
-func (board *JobBoard) Set(index int, proj Projet) {
-	board.projetBoard.Store(index, proj)
+// Changer le projet sur lequel un ouvrier travail
+func (board *JobBoard) Set(idOuvrier int, proj Projet) {
+	board.projetBoard.Store(idOuvrier, proj)
 }
 
-// Supprimer les tâches d'ouvrier associé à un projet
-func (board *JobBoard) Delete(index int) {
+// Supprimer toutes les tâches d'ouvrier associé à un projet
+func (board *JobBoard) DeleteProject(idProjet int) {
 	board.projetBoard.Range(func(key, value interface{}) bool {
 		proj, ok := value.(Projet)
-		if ok && proj.Id == index {
+		if ok && proj.Id == idProjet {
 			board.projetBoard.Delete(key)
 		}
 		return true
 	})
+}
+
+// Supprimer une tâche associée à un ouvrier
+func (board *JobBoard) DeleteOuvrier(idOuvrier int) {
+	// Si l'ouvrier est associé à un projet
+	if _, ok := board.projetBoard.Load(idOuvrier); ok {
+		// Supprimer la tâche de l'ouvrier
+		board.projetBoard.Delete(idOuvrier)
+	}
 }

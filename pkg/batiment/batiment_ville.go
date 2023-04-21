@@ -43,7 +43,8 @@ func (batiments *BatimentVille) GetAll() []Batiment {
 
 // Trouve un emploi à un citoyen dans un batiment de la ville
 func (batiments *BatimentVille) Visite() (Batiment, error) {
-
+	batimentsVille.batimentsVilleMutex.RLock()
+	defer batimentsVille.batimentsVilleMutex.RUnlock()
 	//Temporary fix:
 	rand.Seed(time.Now().UnixNano())
 	return batiments.Get(rand.Intn(batiments.Length())), nil
@@ -59,6 +60,8 @@ func (batiments *BatimentVille) Visite() (Batiment, error) {
 }
 
 func (batiments *BatimentVille) ResetVisites() {
+	batiments.batimentsVilleMutex.Lock()
+	defer batiments.batimentsVilleMutex.Unlock()
 	for _, batiment := range batiments.batimentsVille {
 		batiment.Visitors = 0
 	}
