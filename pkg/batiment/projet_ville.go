@@ -6,7 +6,8 @@ import (
 	"sync"
 )
 
-// Structure d'exclusion mutuelle read/write pour gérer les proejts de la ville qui sont partagés par différents threads.
+// ProjetVille contient la liste des projets de construction en cours
+// Structure d'exclusion mutuelle read/write pour gérer les projets de la ville qui sont une partagés par différents threads.
 // sync.RWMutex permet la lecture simultané de plusieurs processus ou un seul processus en écriture.
 type ProjetVille struct {
 	projetsVille      []Projet
@@ -73,7 +74,7 @@ func (projets *ProjetVille) GetAll() []Projet {
 }
 
 // Trouve et ajoute un travail au jobBoard pour un ouvrier, s'il n'y a pas de travail retourne un projet vide et une erreur
-func (projets *ProjetVille) FindWork(idOuvrier int, jobBoard JobBoard) (Projet, error) {
+func (projets *ProjetVille) FindWork(idOuvrier int) (Projet, error) {
 	projets.projetsVilleMutex.Lock()
 	defer projets.projetsVilleMutex.Unlock()
 
@@ -87,7 +88,6 @@ func (projets *ProjetVille) FindWork(idOuvrier int, jobBoard JobBoard) (Projet, 
 				dayWork := proj.Capacity * workUnitPerDay
 				if proj.Travail+dayWork < proj.Batiment.Work {
 					proj.Capacity++
-					jobBoard.Set(idOuvrier, proj)
 					return proj, nil
 				}
 			}
@@ -97,7 +97,6 @@ func (projets *ProjetVille) FindWork(idOuvrier int, jobBoard JobBoard) (Projet, 
 				dayWork := proj.Capacity * workUnitPerDay
 				if proj.Travail+dayWork < proj.Batiment.Work {
 					proj.Capacity++
-					jobBoard.Set(idOuvrier, proj)
 					return proj, nil
 				}
 			}

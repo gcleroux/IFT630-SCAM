@@ -21,7 +21,8 @@ var idProjet int = 0
 var projets ProjetVille = ProjetVille{projetsVille: []Projet{}}
 
 // On keep track de l'assignation des ouvriers
-var jobBoardVille JobBoard
+// var jobBoardVille JobBoard
+var jobBoardVille JobBoard = JobBoard{projetBoard: make(map[int]Projet)}
 
 // Le travail accompli par un travailleur dans une journée
 var workUnitPerDay int
@@ -90,15 +91,13 @@ func DemandeTravail(idOuvrier int) (Projet, error) {
 	}
 
 	// On regarde si l'ouvrier est deja associe a un projet
-	if proj, ok := jobBoardVille.GetProjet(idOuvrier); ok {
+	if proj, ok := jobBoardVille.Get(idOuvrier); ok {
 		travailFait, err := projets.GetWorkDoneProjet(proj.Id)
-		fmt.Println("============ Projet ", proj.Id, " travail fait = ")
 		if err != nil {
 			return Projet{}, err
 		}
 
 		travailAFaire, err := projets.GetWorkProjet(proj.Id)
-		fmt.Println("********** Travail afaire = ", travailAFaire)
 		if err != nil {
 			return Projet{}, err
 		}
@@ -110,12 +109,14 @@ func DemandeTravail(idOuvrier int) (Projet, error) {
 	}
 
 	// On assigne un nouveau projet a l'ouvrier, s'il a un emploi de disponible
-	newProj, err := projets.FindWork(idOuvrier, jobBoardVille)
+	newProj, err := projets.FindWork(idOuvrier)
 
 	if err != nil {
-		jobBoardVille.DeleteOuvrier(idOuvrier) // Retirer le projet associé à l'ouvrier s'il existe
+		jobBoardVille.Delete(idOuvrier) // Retirer le projet associé à l'ouvrier s'il existe
 		return Projet{}, err
 	}
+
+	jobBoardVille.Set(idOuvrier, newProj)
 
 	return newProj, nil
 }
@@ -134,7 +135,7 @@ func CheckWorkDone(t Travail) {
 
 			// Le batiment est complete, on l'enleve des projets pour le mettre dans les complets
 			if p.Travail >= p.Batiment.Work {
-				jobBoardVille.DeleteProject(p.Id)
+				jobBoardVille.DeleteProjet(p.Id)
 
 				fmt.Println("[REGISTRE]: La construction de", p.Batiment.Name, p.Id, "est terminée!")
 				projets.Delete(idx)

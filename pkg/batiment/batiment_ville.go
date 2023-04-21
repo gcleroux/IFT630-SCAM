@@ -1,11 +1,11 @@
 package batiment
 
 import (
-	"math/rand"
+	"errors"
 	"sync"
-	"time"
 )
 
+// BatimentVille contient la liste des batiments complétés de la ville
 // Structure d'exclusion mutuelle read/write pour gérer les batiments de la ville qui sont une partagés par différents threads.
 // sync.RWMutex permet la lecture simultané de plusieurs processus ou un seul processus en écriture.
 type BatimentVille struct {
@@ -36,33 +36,35 @@ func (batiments *BatimentVille) Get(index int) Batiment {
 
 // Retourne toute la liste des batiments
 func (batiments *BatimentVille) GetAll() []Batiment {
-	batimentsVille.batimentsVilleMutex.RLock()
-	defer batimentsVille.batimentsVilleMutex.RUnlock()
-	return batimentsVille.batimentsVille
+	batiments.batimentsVilleMutex.RLock()
+	defer batiments.batimentsVilleMutex.RUnlock()
+	return batiments.batimentsVille
 }
 
 // Trouve un emploi à un citoyen dans un batiment de la ville
 func (batiments *BatimentVille) Visite() (Batiment, error) {
-	batimentsVille.batimentsVilleMutex.RLock()
-	defer batimentsVille.batimentsVilleMutex.RUnlock()
+	batiments.batimentsVilleMutex.Lock()
+	defer batiments.batimentsVilleMutex.Unlock()
 	//Temporary fix:
-	rand.Seed(time.Now().UnixNano())
-	return batiments.Get(rand.Intn(batiments.Length())), nil
+	// rand.Seed(time.Now().UnixNano())
+	// return batiments.Get(rand.Intn(batiments.Length())), nil
 
 	//TODO: batiment.Visitors++ ne fonctionne pas. Le compteur reste à 1 est tous les citoyens vont travailler dans le même bâtiment.
-	// for _, batiment := range batiments.batimentsVille {
-	// 	if batiment.Visitors < batiment.Capacity {
-	// 		batiment.Visitors++
-	// 		return batiment, nil
-	// 	}
-	// }
-	//return Batiment{}, errors.New("Pas de batiment disponible")
+	for index, batiment := range batiments.batimentsVille {
+		if batiment.Visitors < batiment.Capacity {
+			batiments.batimentsVille[index].Visitors += 1
+			return batiment, nil
+		}
+	}
+	return Batiment{}, errors.New("Pas de batiment disponible")
 }
 
 func (batiments *BatimentVille) ResetVisites() {
 	batiments.batimentsVilleMutex.Lock()
 	defer batiments.batimentsVilleMutex.Unlock()
+	// fmt.Println("Nombre de visiteur dans les batiments")
 	for _, batiment := range batiments.batimentsVille {
+		// fmt.Print("Batiment :", batiment.Visitors, " | ")
 		batiment.Visitors = 0
 	}
 }

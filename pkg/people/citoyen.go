@@ -1,6 +1,7 @@
 package people
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/gcleroux/IFT630-SCAM/pkg/batiment"
@@ -23,7 +24,7 @@ func CitoyenStep(wg *sync.WaitGroup, id int) {
 		return
 	}
 
-	// fmt.Println("Le citoyen", id, "visite le batiment,", batiment.Name)
+	fmt.Println("Le citoyen", id, "visite le batiment,", batiment.Name)
 
 	// Envoi des ressources au maire
 	Revenus <- batiment.Income
