@@ -62,3 +62,12 @@ func (batiments *BatimentVille) ResetVisites() {
 		batiment.Visitors = 0
 	}
 }
+
+func (batiments *BatimentVille) CalculCapacitéEmploieVille() int {
+	capacitéEmploieVille := 0
+	for _, b := range batiments.batimentsVille {
+		capacitéEmploieVille += b.Capacity
+	}
+
+	return capacitéEmploieVille
+}

@@ -75,7 +75,7 @@ func GetBatimentsAbordables(budget int) []Batiment {
 	return res
 }
 
-// Retoune une liste des batimetn qui génèrent de la joie
+// Retoune une liste des batiments qui génèrent de la joie
 func GetBatimentJoyeux(abordables []Batiment) []Batiment {
 	res := []Batiment{}
 
@@ -87,12 +87,24 @@ func GetBatimentJoyeux(abordables []Batiment) []Batiment {
 	return res
 }
 
-// Retoune une liste des batimetn qui génèrent de la joie
+// Retoune une liste des batiments qui génèrent de la joie
 func GetBatimentSante(abordables []Batiment) []Batiment {
 	res := []Batiment{}
 
 	for _, b := range abordables {
 		if b.GenerationSante > 0 {
+			res = append(res, b)
+		}
+	}
+	return res
+}
+
+// Retoune une liste des batiments qui génèrent de l'argent
+func GetBatimentBudget(abordables []Batiment) []Batiment {
+	res := []Batiment{}
+
+	for _, b := range abordables {
+		if b.Income > 0 {
 			res = append(res, b)
 		}
 	}
@@ -187,4 +199,12 @@ func ProjetsGenereSante(projets []Projet) bool {
 		}
 	}
 	return false
+}
+
+func GetCapacitéEmploieVille() int {
+	total := batimentsVille.CalculCapacitéEmploieVille()
+	if total > 0 {
+		return total
+	}
+	return 1
 }
