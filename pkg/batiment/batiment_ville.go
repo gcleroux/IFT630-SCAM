@@ -1,6 +1,7 @@
 package batiment
 
 import (
+	"errors"
 	"sync"
 )
 
@@ -42,22 +43,18 @@ func (batiments *BatimentVille) GetAll() []Batiment {
 // Trouve un emploi à un citoyen dans un batiment de la ville
 func (batiments *BatimentVille) Visite(id int) (Batiment, error) {
 
-	//Égale parmis les batiments.
-	return batiments.Get(id % batiments.Length()), nil
+	//Rempli les bâtiments en ordre de construction
+	j := 0
+	for _, b := range batiments.batimentsVille {
+		for i := 0; i < b.Capacity; i++ {
+			if i+j == id {
+				return b, nil
+			}
+		}
+		j += b.Capacity
+	}
 
-	//Random
-	//rand.Seed(time.Now().UnixNano())
-	//return batiments.Get(rand.Intn(batiments.Length())), nil
-
-	//Tous les citoyens vont au premier batiment
-	//TODO: batiment.Visitors++ ne fonctionne pas. Le compteur reste à 1 est tous les citoyens vont travailler dans le même bâtiment.
-	// for _, batiment := range batiments.batimentsVille {
-	// 	if batiment.Visitors < batiment.Capacity {
-	// 		batiment.Visitors++
-	// 		return batiment, nil
-	// 	}
-	// }
-	//return Batiment{}, errors.New("Pas de batiment disponible")
+	return Batiment{}, errors.New("Pas de batiment disponible")
 }
 
 func (batiments *BatimentVille) ResetVisites() {
