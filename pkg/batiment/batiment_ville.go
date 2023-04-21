@@ -63,8 +63,8 @@ func (batiments *BatimentVille) ResetVisites() {
 	batiments.batimentsVilleMutex.Lock()
 	defer batiments.batimentsVilleMutex.Unlock()
 	// fmt.Println("Nombre de visiteur dans les batiments")
-	for _, batiment := range batiments.batimentsVille {
+	for index, _ := range batiments.batimentsVille {
 		// fmt.Print("Batiment :", batiment.Visitors, " | ")
-		batiment.Visitors = 0
+		batiments.batimentsVille[index].Visitors = 0
 	}
 }

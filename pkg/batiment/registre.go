@@ -21,7 +21,6 @@ var idProjet int = 0
 var projets ProjetVille = ProjetVille{projetsVille: []Projet{}}
 
 // On keep track de l'assignation des ouvriers
-// var jobBoardVille JobBoard
 var jobBoardVille JobBoard = JobBoard{projetBoard: make(map[int]Projet)}
 
 // Le travail accompli par un travailleur dans une journée
@@ -168,7 +167,16 @@ func GetBatiments() []Batiment {
 	return batimentsVille.GetAll()
 }
 
-func GetProjets() []string {
+func GetBatimentsList() []string {
+	listeBatiment := batimentsVille.GetAll()
+	var listeNomBatiment []string
+	for _, batiment := range listeBatiment {
+		listeNomBatiment = append(listeNomBatiment, batiment.Name)
+	}
+	return listeNomBatiment
+}
+
+func GetProjetsList() []string {
 	listeProjet := projets.GetAll()
 	var listeNomProjet []string
 	for _, proj := range listeProjet {
