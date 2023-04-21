@@ -71,7 +71,7 @@ func main() {
 		go batiment.RegistreStep(&wg, done)
 
 		wg.Add(1)
-		go people.MayorStep(&wg, done)
+		go people.MayorStep(&wg, done, tauxSante, tauxJoie)
 
 		wg.Add(nbOuvriers)
 		for i := 0; i < nbOuvriers; i++ {

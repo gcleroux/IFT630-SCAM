@@ -75,6 +75,30 @@ func GetBatimentsAbordables(budget int) []Batiment {
 	return res
 }
 
+// Retoune une liste des batimetn qui génèrent de la joie
+func GetBatimentJoyeux(abordables []Batiment) []Batiment {
+	res := []Batiment{}
+
+	for _, b := range abordables {
+		if b.GenerationJoie > 0 {
+			res = append(res, b)
+		}
+	}
+	return res
+}
+
+// Retoune une liste des batimetn qui génèrent de la joie
+func GetBatimentSante(abordables []Batiment) []Batiment {
+	res := []Batiment{}
+
+	for _, b := range abordables {
+		if b.GenerationSante > 0 {
+			res = append(res, b)
+		}
+	}
+	return res
+}
+
 // Assigne un projet à un ouvrier, s'il n'est pas déjà sur un autre projet
 func DemandeTravail(id int) (Projet, error) {
 	if projets.Length() == 0 {
@@ -121,14 +145,14 @@ func CheckWorkDone(t Travail) {
 	}
 }
 
-func VisiteBatiment() (Batiment, error) {
+func VisiteBatiment(id int) (Batiment, error) {
 	batimentsLength := batimentsVille.Length()
 	if batimentsLength == 0 {
 		return Batiment{}, errors.New("Pas de batiment dans la ville")
 	}
 
 	// Le citoyen visite un batiment
-	batiment, err := batimentsVille.Visite()
+	batiment, err := batimentsVille.Visite(id)
 
 	if err != nil {
 		return Batiment{}, err
@@ -141,4 +165,26 @@ func VisiteBatiment() (Batiment, error) {
 // Retourne la liste des batiments de la ville
 func GetBatiments() []Batiment {
 	return batimentsVille.GetAll()
+}
+
+func GetProjets() []Projet {
+	return projets.projetsVille
+}
+
+func ProjetsGenereJoie(projets []Projet) bool {
+	for _, b := range projets {
+		if b.Batiment.GenerationJoie > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func ProjetsGenereSante(projets []Projet) bool {
+	for _, b := range projets {
+		if b.Batiment.GenerationSante > 0 {
+			return true
+		}
+	}
+	return false
 }

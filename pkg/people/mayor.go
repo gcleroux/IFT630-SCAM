@@ -30,19 +30,42 @@ func MayorInit(budget int) {
 }
 
 // Le maire fait des demandes de projets si le budget le permet
-func MayorStep(wg *sync.WaitGroup, done <-chan interface{}) {
+func MayorStep(wg *sync.WaitGroup, done <-chan interface{}, tauxSante float64, tauxJoie float64) {
 	defer wg.Done()
 	rand.Seed(time.Now().UnixNano())
 	// On retrouve la liste des batiments abordables
 	abordables := batiment.GetBatimentsAbordables(budgetVille)
 
+	// On retrouve les bâtiments en train d'être construit
+	projets := batiment.GetProjets()
+
 	if len(abordables) != 0 {
-		// On choisit un batiment au hasard dans la liste des batiments abordables
-		choix := abordables[rand.Intn(len(abordables))]
-		nbProjets++
-		budgetVille -= choix.Price
-		fmt.Println("[MAYOR]: Le maire demande la construction d'un", choix.Name)
-		batiment.EnConstruction <- choix
+		if tauxJoie < 40 || tauxSante < 40 {
+			if tauxJoie < tauxSante && !batiment.ProjetsGenereJoie(projets) {
+				// On retrouve la liste des batiments qui augmente la joie
+				batimentJoie := batiment.GetBatimentJoyeux(abordables)
+				choix := batimentJoie[rand.Intn(len(abordables))]
+				nbProjets++
+				budgetVille -= choix.Price
+				fmt.Println("[MAYOR]: Le maire demande la construction d'un", choix.Name)
+				batiment.EnConstruction <- choix
+			} else if !batiment.ProjetsGenereSante(projets) {
+				// On retrouve la liste des batiments qui augmente la sante
+				batimentSante := batiment.GetBatimentSante(abordables)
+				choix := batimentSante[rand.Intn(len(abordables))]
+				nbProjets++
+				budgetVille -= choix.Price
+				fmt.Println("[MAYOR]: Le maire demande la construction d'un", choix.Name)
+				batiment.EnConstruction <- choix
+			}
+		} else {
+			// On choisit un batiment au hasard dans la liste des batiments abordables
+			choix := abordables[rand.Intn(len(abordables))]
+			nbProjets++
+			budgetVille -= choix.Price
+			fmt.Println("[MAYOR]: Le maire demande la construction d'un", choix.Name)
+			batiment.EnConstruction <- choix
+		}
 	}
 
 	// Reset journalière à 0 des ressources secondaires
