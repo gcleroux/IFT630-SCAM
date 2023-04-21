@@ -70,7 +70,7 @@ func MayorStep(wg *sync.WaitGroup, done <-chan interface{}, tauxSante float64, t
 			// On choisit un batiment qui produit de l'argent dans la liste des batiments abordables
 			batimentBudget := batiment.GetBatimentBudget(abordables)
 			if len(batimentBudget) != 0 {
-				choix := abordables[rand.Intn(len(abordables))]
+				choix := batimentBudget[rand.Intn(len(batimentBudget))]
 				nbProjets++
 				budgetVille -= choix.Price
 				fmt.Println("[MAYOR]: Le maire demande la construction d'un", choix.Name)
