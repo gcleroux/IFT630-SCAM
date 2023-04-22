@@ -56,20 +56,8 @@ func main() {
 
 		// Affichage de la journee
 		fmt.Printf("\nJour #%d\n=========\n", jour)
-		if jour > 1 {
-			fmt.Print("Liste des batiments de la ville : ")
-			for batiment, count := range registre.GetBatimentsList() {
-				fmt.Print(batiment, "(", count, ") ")
-			}
-			fmt.Println()
-			fmt.Print("Liste des projets en cours : ")
-			for batiment, count := range registre.GetProjetsList() {
-				fmt.Print(batiment, "(", count, ") ")
-			}
-			fmt.Println()
-		}
 
-		// Un obtient le channel qui sera ferme a la fin d'une journee
+		// On obtient le channel qui sera ferme a la fin d'une journee
 		// Les composantes qui sont dependants de la longueur d'une journee doivent
 		// recevoir le channel en parametre
 		done := utils.DayTime(time.Duration(conf.DayTime) * time.Second)
@@ -97,6 +85,64 @@ func main() {
 		for i := 0; i < nbCitoyens; i++ {
 			go people.CitoyenStep(&wg, i)
 		}
+
+		// On attend que tout le monde dans la ville termine sa journee
+		wg.Wait()
+
+		// Affichage de la liste des batiments et des projets
+		listeBatiments := registre.GetBatimentsList()
+		fmt.Print("Liste des batiments de la ville : ")
+		if len(listeBatiments) > 0 {
+			for batiment, count := range listeBatiments {
+				fmt.Print(batiment, "(", count, ") ")
+			}
+		} else {
+			fmt.Print("aucun batiment")
+		}
+		fmt.Println()
+		listeProjets := registre.GetProjetsList()
+		fmt.Print("Liste des projets en cours : ")
+		if len(listeProjets) > 0 {
+			for batiment, count := range listeProjets {
+				fmt.Print(batiment, "(", count, ") ")
+			}
+		} else {
+			fmt.Print("aucun projet en cours")
+		}
+		fmt.Println()
+
+		// Les visiteurs quittent les batiments
+		chantiers, err := registre.GetListeChantiers()
+		if err != nil {
+			fmt.Println("Ouvrier sur les chantiers : ", err)
+		} else {
+			fmt.Println("Ouvrier sur les chantiers : ")
+			for nomChantier, nbOuvrier := range chantiers {
+				if nbOuvrier == 1 {
+					fmt.Println(" - 1 ouvrier travaille sur le chantier : ", nomChantier)
+				} else if nbOuvrier > 1 {
+					fmt.Println(" - ", nbOuvrier, " ouvriers travaillent sur le chantier : ", nomChantier)
+				}
+			}
+		}
+
+		// Affichage du nombre de visites durant la journée
+		visites, err := registre.GetListeVisites()
+		if err != nil {
+			fmt.Println("Visites des citoyens :", err)
+		} else {
+			fmt.Println("Visites des citoyens : ")
+			for batiment, count := range visites {
+				if count == 1 {
+					fmt.Println(" - 1 citoyen a visité : ", batiment)
+				} else if count > 1 {
+					fmt.Println(" - ", count, " citoyens ont visités : ", batiment)
+				}
+			}
+		}
+
+		// Affichage du nombre d'ouvrier dans chaque projet
+		// chantiers := registre.GetListeChantiers()
 
 		nbNewCitoyen := 0
 		// De nouveaux ouvriers et citoyens sont potentiellement ajoutés
@@ -126,9 +172,6 @@ func main() {
 		} else if nbNewCitoyen == 1 {
 			fmt.Println("Un citoyen est né dans la métropole.")
 		}
-
-		// On attend que tout le monde dans la ville termine sa journee
-		wg.Wait()
 
 		// On additionne la joie et sante généré par les citoyens aujourd'hui
 		tauxJoie += float64(people.GetJoieJournaliere())

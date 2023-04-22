@@ -49,7 +49,6 @@ func RegistreStep(wg *sync.WaitGroup, done <-chan interface{}) {
 			CheckWorkDone(t)
 		case <-done:
 			// La journee est terminee
-			batimentsVille.ResetVisites()
 			return
 		}
 	}
@@ -182,14 +181,13 @@ func CheckWorkDone(t batiment.Travail) {
 	}
 }
 
-func VisiteBatiment(id int) (batiment.Batiment, error) {
-	batimentsLength := batimentsVille.Length()
-	if batimentsLength == 0 {
+func VisiteBatiment() (batiment.Batiment, error) {
+	if batimentsVille.Length() == 0 {
 		return batiment.Batiment{}, errors.New("Pas de batiment dans la ville")
 	}
 
 	// Le citoyen visite un batiment
-	b, err := batimentsVille.Visite(id)
+	b, err := batimentsVille.Visite()
 
 	if err != nil {
 		return batiment.Batiment{}, err
@@ -197,6 +195,11 @@ func VisiteBatiment(id int) (batiment.Batiment, error) {
 
 	// On retourne un batiment a visiter au hasard
 	return b, nil
+}
+
+// Met à 0 le compte des visiteurs de chaque batiment
+func ResetVisites() {
+	batimentsVille.ResetVisites()
 }
 
 // Retourne la liste des batiments de la ville
@@ -210,6 +213,28 @@ func GetBatimentsList() map[string]int {
 
 func GetProjetsList() map[string]int {
 	return projets.GetProjetsList()
+}
+
+func GetListeChantiers() (map[string]int, error) {
+	listeChantiers, err := projets.GetListeChantiers()
+	if err != nil {
+		return listeChantiers, err
+	}
+	return listeChantiers, nil
+}
+
+func GetListeVisites() (map[string]int, error) {
+	mapVisite := batimentsVille.GetListeVisites()
+	empty := true
+	for _, count := range mapVisite {
+		if count > 0 {
+			empty = false
+		}
+	}
+	if empty {
+		return map[string]int{}, errors.New("aucune visite durant la jounée")
+	}
+	return mapVisite, nil
 }
 
 func GetProjets() []batiment.Projet {

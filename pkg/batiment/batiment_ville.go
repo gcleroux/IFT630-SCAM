@@ -31,12 +31,15 @@ func (batiments *BatimentVille) Length() int {
 func (batiments *BatimentVille) GetAll() []Batiment {
 	batiments.batimentsVilleMutex.RLock()
 	defer batiments.batimentsVilleMutex.RUnlock()
-	return batiments.batimentsVille
+	listeBatiments := batiments.batimentsVille
+	return listeBatiments
 }
 
+// Retourne le nombre de batiment de chaque catégorie
 func (batiments *BatimentVille) GetBatimentsList() map[string]int {
 	batiments.batimentsVilleMutex.RLock()
 	defer batiments.batimentsVilleMutex.RUnlock()
+	// Compter le nombre de batiment de chaque type
 	batimentMap := make(map[string]int)
 	for _, b := range batiments.batimentsVille {
 		if batimentMap[b.Name] == 0 {
@@ -48,21 +51,31 @@ func (batiments *BatimentVille) GetBatimentsList() map[string]int {
 	return batimentMap
 }
 
-// Trouve un emploi à un citoyen dans un batiment de la ville
-func (batiments *BatimentVille) Visite(id int) (Batiment, error) {
+// Retourne un map des visites par type de batiment map(key: <NomBatiment>, value: <NombreVisiteur>)
+func (batiments *BatimentVille) GetListeVisites() map[string]int {
 	batiments.batimentsVilleMutex.RLock()
 	defer batiments.batimentsVilleMutex.RUnlock()
-	// Rempli les bâtiments en ordre de construction
-	j := 0
+	// Compter le nombre de visiteurs dans chaque batiment
+	visiteMap := make(map[string]int)
 	for _, b := range batiments.batimentsVille {
-		for i := 0; i < b.Capacity; i++ {
-			if i+j == id {
-				return b, nil
-			}
-		}
-		j += b.Capacity
+		// fmt.Println("[DEBUG] Ajout de visiteurs = ", batiments.batimentsVille[index].Visitors)
+		visiteMap[b.Name] += b.Visitors
 	}
+	return visiteMap
+}
 
+// Trouve un emploi à un citoyen dans un batiment de la ville
+func (batiments *BatimentVille) Visite() (Batiment, error) {
+	batiments.batimentsVilleMutex.Lock()
+	defer batiments.batimentsVilleMutex.Unlock()
+	// Les citoyens visitent les batiments dans l'ordrede construction
+	for index, batiment := range batiments.batimentsVille {
+		if batiment.Visitors < batiment.Capacity {
+			batiments.batimentsVille[index].Visitors += 1
+			// fmt.Println("[DEBUG] ", batiment.Name, " visitors = ", batiments.batimentsVille[index].Visitors)
+			return batiment, nil
+		}
+	}
 	return Batiment{}, errors.New("pas de batiment disponible")
 }
 
@@ -70,19 +83,20 @@ func (batiments *BatimentVille) Visite(id int) (Batiment, error) {
 func (batiments *BatimentVille) ResetVisites() {
 	batiments.batimentsVilleMutex.Lock()
 	defer batiments.batimentsVilleMutex.Unlock()
-	for _, batiment := range batiments.batimentsVille {
-		batiment.Visitors = 0
+	// Remettre le compte des visiteurs des batiments à 0
+	for index := range batiments.batimentsVille {
+		batiments.batimentsVille[index].Visitors = 0
 	}
 }
 
 // Retourne la somme des Capacités pour tous les bâtiments de la ville
 func (batiments *BatimentVille) CalculCapacitéEmploieVille() int {
-	batiments.batimentsVilleMutex.Lock()
-	defer batiments.batimentsVilleMutex.Unlock()
+	batiments.batimentsVilleMutex.RLock()
+	defer batiments.batimentsVilleMutex.RUnlock()
+	// Faire la somme de la capacité d'emploi dans la ville
 	capacitéEmploieVille := 0
 	for _, b := range batiments.batimentsVille {
 		capacitéEmploieVille += b.Capacity
 	}
-
 	return capacitéEmploieVille
 }

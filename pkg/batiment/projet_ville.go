@@ -3,6 +3,7 @@ package batiment
 import (
 	"errors"
 	"math/rand"
+	"strconv"
 	"sync"
 )
 
@@ -35,7 +36,7 @@ func (projets *ProjetVille) Length() int {
 	return len(projets.projetsVille)
 }
 
-// Retourne le travail accomplit sur un projet
+// Retourne la quantité de travail nécessaire pour compléter un projet
 func (projets *ProjetVille) GetWorkProjet(idProjet int) (int, error) {
 	projets.projetsVilleMutex.RLock()
 	defer projets.projetsVilleMutex.RUnlock()
@@ -70,7 +71,8 @@ func (projets *ProjetVille) Set(index int, proj Projet) {
 func (projets *ProjetVille) GetAll() []Projet {
 	projets.projetsVilleMutex.RLock()
 	defer projets.projetsVilleMutex.RUnlock()
-	return projets.projetsVille
+	listeProjets := projets.projetsVille
+	return listeProjets
 }
 
 func (projets *ProjetVille) GetProjetsList() map[string]int {
@@ -85,6 +87,22 @@ func (projets *ProjetVille) GetProjetsList() map[string]int {
 		}
 	}
 	return projMap
+}
+
+// Retourne la liste des chantiers ainsi que le nombre d'ouvrier travaillant sur chacun d'entre eux
+func (projets *ProjetVille) GetListeChantiers() (map[string]int, error) {
+	projets.projetsVilleMutex.RLock()
+	defer projets.projetsVilleMutex.RUnlock()
+	listeProjet := make(map[string]int)
+	if len(projets.projetsVille) == 0 {
+		return map[string]int{}, errors.New("Aucun projet en cours")
+	}
+	for _, proj := range projets.projetsVille {
+		cle := proj.Batiment.Name + strconv.Itoa(proj.Id)
+		// fmt.Println("[DEBUG] Chantier ", cle, " = ", projets.projetsVille[index].Capacity)
+		listeProjet[cle] = proj.Capacity
+	}
+	return listeProjet, nil
 }
 
 // Retourne vrai si un des projets peut générer de la joie
@@ -125,16 +143,16 @@ func (projets *ProjetVille) FindWork(idOuvrier int, work int) (Projet, error) {
 			if proj.Capacity < proj.Batiment.WorkerCapacity {
 				dayWork := proj.Capacity * work
 				if proj.Travail+dayWork < proj.Batiment.Work {
-					proj.Capacity++
+					projets.projetsVille[pIndex].Capacity++
 					return proj, nil
 				}
 			}
 		}
-		for _, proj := range projets.projetsVille {
+		for index, proj := range projets.projetsVille {
 			if proj.Capacity < proj.Batiment.WorkerCapacity {
 				dayWork := proj.Capacity * work
 				if proj.Travail+dayWork < proj.Batiment.Work {
-					proj.Capacity++
+					projets.projetsVille[index].Capacity++
 					return proj, nil
 				}
 			}
