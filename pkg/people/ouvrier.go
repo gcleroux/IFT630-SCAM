@@ -29,7 +29,7 @@ func OuvrierStep(wg *sync.WaitGroup, id int) {
 		return
 	}
 
-	fmt.Println("L'ouvrier", id, "travaille sur le chantier du ", job.Batiment.Name)
+	fmt.Println("L'ouvrier", id, "travaille sur le chantier du", job.Batiment.Name, job.Id)
 
 	// On signale au registre qu'on a terminé pour la journee
 	work := batiment.Travail{Id: job.Id, Effort: travailOuvrier}

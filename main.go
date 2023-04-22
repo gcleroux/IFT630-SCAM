@@ -25,6 +25,9 @@ func main() {
 	people.OuvrierInit(conf.NbOuvrier, conf.TravailOuvrier)
 	people.CitoyenInit(conf.NbCitoyen)
 
+	// Init du  Registre
+	batiment.RegisterInit(conf.TravailOuvrier)
+
 	//Start le timer
 	start := time.Now()
 
@@ -53,6 +56,8 @@ func main() {
 
 		// Affichage de la journee
 		fmt.Printf("\nJour #%d\n=========\n", jour)
+		fmt.Println("Liste des batiments de la ville : ", batiment.GetBatimentsList())
+		fmt.Println("Liste des projets en cours : ", batiment.GetProjetsList())
 
 		// Un obtient le channel qui sera ferme a la fin d'une journee
 		// Les composantes qui sont dependants de la longueur d'une journee doivent

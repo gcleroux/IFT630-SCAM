@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strconv"
 	"sync"
 )
 
@@ -20,11 +21,18 @@ var idProjet int = 0
 var projets ProjetVille = ProjetVille{projetsVille: []Projet{}}
 
 // On keep track de l'assignation des ouvriers
-var jobBoardVille JobBoard
+var jobBoardVille JobBoard = JobBoard{projetBoard: make(map[int]Projet)}
+
+// Le travail accompli par un travailleur dans une journée
+var workUnitPerDay int
 
 // Channels
 var EnConstruction = make(chan Batiment)
 var JourneeTravail = make(chan Travail)
+
+func RegisterInit(workPerDay int) {
+	workUnitPerDay = workPerDay
+}
 
 // Le registre reste ouvert toute la journee
 func RegistreStep(wg *sync.WaitGroup, done <-chan interface{}) {
@@ -112,22 +120,38 @@ func GetBatimentBudget(abordables []Batiment) []Batiment {
 }
 
 // Assigne un projet à un ouvrier, s'il n'est pas déjà sur un autre projet
-func DemandeTravail(id int) (Projet, error) {
+func DemandeTravail(idOuvrier int) (Projet, error) {
 	if projets.Length() == 0 {
 		return Projet{}, errors.New("Pas de projet en cours")
 	}
 
 	// On regarde si l'ouvrier est deja associe a un projet
-	if proj, ok := jobBoardVille.Get(id); ok {
-		return proj, nil
+	if proj, ok := jobBoardVille.Get(idOuvrier); ok {
+		travailFait, err := projets.GetWorkDoneProjet(proj.Id)
+		if err != nil {
+			return Projet{}, err
+		}
+
+		travailAFaire, err := projets.GetWorkProjet(proj.Id)
+		if err != nil {
+			return Projet{}, err
+		}
+
+		// Vérifier si le projet est déjà terminé. Si non, l'ouvrier continue le projet
+		if travailFait < travailAFaire {
+			return proj, nil
+		}
 	}
 
 	// On assigne un nouveau projet a l'ouvrier, s'il a un emploi de disponible
-	newProj, err := projets.FindWork(id, jobBoardVille)
+	newProj, err := projets.FindWork(idOuvrier)
 
 	if err != nil {
+		jobBoardVille.Delete(idOuvrier) // Retirer le projet associé à l'ouvrier s'il existe
 		return Projet{}, err
 	}
+
+	jobBoardVille.Set(idOuvrier, newProj)
 
 	return newProj, nil
 }
@@ -146,7 +170,7 @@ func CheckWorkDone(t Travail) {
 
 			// Le batiment est complete, on l'enleve des projets pour le mettre dans les complets
 			if p.Travail >= p.Batiment.Work {
-				jobBoardVille.Delete(p.Id)
+				jobBoardVille.DeleteProjet(p.Id)
 
 				fmt.Println("[REGISTRE]: La construction de", p.Batiment.Name, p.Id, "est terminée!")
 				projets.Delete(idx)
@@ -179,8 +203,26 @@ func GetBatiments() []Batiment {
 	return batimentsVille.GetAll()
 }
 
+func GetBatimentsList() []string {
+	listeBatiment := batimentsVille.GetAll()
+	var listeNomBatiment []string
+	for _, batiment := range listeBatiment {
+		listeNomBatiment = append(listeNomBatiment, batiment.Name)
+	}
+	return listeNomBatiment
+}
+
+func GetProjetsList() []string {
+	listeProjet := projets.GetAll()
+	var listeNomProjet []string
+	for _, proj := range listeProjet {
+		listeNomProjet = append(listeNomProjet, proj.Batiment.Name+strconv.Itoa(proj.Id))
+	}
+	return listeNomProjet
+}
+
 func GetProjets() []Projet {
-	return projets.projetsVille
+	return projets.GetAll()
 }
 
 func ProjetsGenereJoie(projets []Projet) bool {
