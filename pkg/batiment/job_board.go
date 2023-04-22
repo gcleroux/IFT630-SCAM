@@ -5,7 +5,7 @@ import (
 )
 
 // JobBoard contient une map de tous les ouvrier et à quel projet ils sont assignés
-// Structure d'exclusion mutuelle read/write pour gérer les proejts de la ville qui sont partagés par différents threads.
+// Structure d'exclusion mutuelle read/write pour gérer les projets de la ville qui sont partagés par différents threads.
 // sync.RWMutex permet la lecture simultané de plusieurs processus ou un seul processus en écriture.
 type JobBoard struct {
 	projetBoard      map[int]Projet

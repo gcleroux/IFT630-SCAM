@@ -219,6 +219,7 @@ func GetProjetsList() []string {
 		listeNomProjet = append(listeNomProjet, proj.Batiment.Name+strconv.Itoa(proj.Id))
 	}
 	return listeNomProjet
+}
 
 func GetProjets() []Projet {
 	return projets.GetAll()
