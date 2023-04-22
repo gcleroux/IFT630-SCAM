@@ -50,7 +50,7 @@ func main() {
 		// Le WaitGroup sert a synchroniser toutes les goroutine pour termine proprement une journee
 		var wg sync.WaitGroup
 
-		// Calcul des moyenens de Joie et Sante pour fin de partie
+		// Calcul des moyennes de Joie et Sante pour fin de partie
 		totalJoie += tauxJoie
 		totalSante += tauxSante
 
@@ -76,7 +76,7 @@ func main() {
 		go batiment.RegistreStep(&wg, done)
 
 		wg.Add(1)
-		go people.MayorStep(&wg, done)
+		go people.MayorStep(&wg, done, tauxSante, tauxJoie, nbCitoyens)
 
 		wg.Add(nbOuvriers)
 		for i := 0; i < nbOuvriers; i++ {
@@ -88,19 +88,33 @@ func main() {
 			go people.CitoyenStep(&wg, i)
 		}
 
+		nbNewCitoyen := 0
 		// De nouveaux ouvriers et citoyens sont potentiellement ajoutés
 		if rand.Intn(100) < conf.TauxRecrutementOuvrier { // 0 <= f < 100, donc 10% d'ajouter un ouvrier
 			if nbCitoyens > 0 {
 				nbOuvriers += 1
 				nbCitoyens -= 1
-				fmt.Println("Un citoyen devient un ouvrier.")
 			}
 		}
 		for i := 0.0; i < math.Ceil(float64(nbCitoyens)/5); i++ {
 			if rand.Intn(100) < conf.TauxNaissance { // 0 <= f < 100, donc 50% d'ajouter un citoyen
 				nbCitoyens += 1
-				fmt.Println("Un citoyen est né dans la métropole.")
+				nbNewCitoyen += 1
 			}
+			//Max 5 naissances par hasard par jour
+			if nbNewCitoyen >= 5 {
+				break
+			}
+		}
+		//Si bonne joie et sante: +1 naissance guarantie
+		if tauxJoie > 50 && tauxSante > 50 {
+			nbCitoyens += 1
+			nbNewCitoyen += 1
+		}
+		if nbNewCitoyen > 1 {
+			fmt.Println(nbNewCitoyen, " nouveaux citoyens sont né dans la métropole.")
+		} else if nbNewCitoyen == 1 {
+			fmt.Println("Un citoyen est né dans la métropole.")
 		}
 
 		// On attend que tout le monde dans la ville termine sa journee
@@ -193,15 +207,16 @@ func main() {
 	fmt.Println("Nombre final d'ouvriers: ", nbOuvriers)
 	fmt.Println("Nombre final de citoyens: ", nbCitoyens)
 	fmt.Println("Nombre de citoyens perdus: ", nbCitoyensPerdus)
-	fmt.Println("Moyenne de joie: ", totalJoie/float64(conf.NbJour))
-	fmt.Println("Moyenne de sante: ", totalSante/float64(conf.NbJour))
+	fmt.Println("Moyenne de joie: ", math.Round(totalJoie/float64(conf.NbJour)))
+	fmt.Println("Moyenne de sante: ", math.Round(totalSante/float64(conf.NbJour)))
 	fmt.Println("Budget restant: ", people.GetBudgetVille())
+	fmt.Println("Taux de citoyens par emploie: ", float64(nbCitoyens)/float64(batiment.GetCapacitéEmploieVille()))
 	fmt.Println("Nombre de bâtiments construits: ", len(batiment.GetBatiments()))
 	fmt.Println("Liste des batiments dans la ville:")
 	for _, b := range batiment.GetBatiments() {
 		fmt.Println(b)
 	}
-	fmt.Println("Score: ", Score) //TODO: Implémenter système de score
+	fmt.Println("Score: ", Score)
 
 	fmt.Println("\nTemps total d'exécution du programme:", time.Since(start))
 }
