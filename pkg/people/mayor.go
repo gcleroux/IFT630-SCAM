@@ -30,19 +30,56 @@ func MayorInit(budget int) {
 }
 
 // Le maire fait des demandes de projets si le budget le permet
-func MayorStep(wg *sync.WaitGroup, done <-chan interface{}) {
+func MayorStep(wg *sync.WaitGroup, done <-chan interface{}, tauxSante float64, tauxJoie float64, nbCitoyenMatin int) {
 	defer wg.Done()
 	rand.Seed(time.Now().UnixNano())
 	// On retrouve la liste des batiments abordables
 	abordables := batiment.GetBatimentsAbordables(budgetVille)
 
+	// On retrouve les bâtiments en train d'être construit
+	projets := batiment.GetProjets()
+
+	tauxEmploiment := float64(nbCitoyenMatin) / float64(batiment.GetCapacitéEmploieVille())
+
 	if len(abordables) != 0 {
-		// On choisit un batiment au hasard dans la liste des batiments abordables
-		choix := abordables[rand.Intn(len(abordables))]
-		nbProjets++
-		budgetVille -= choix.Price
-		fmt.Println("[MAYOR]: Le maire demande la construction d'un", choix.Name)
-		batiment.EnConstruction <- choix
+		if tauxJoie < 60 || tauxSante < 60 {
+			if tauxJoie < tauxSante && !batiment.ProjetsGenereJoie(projets) {
+				// On retrouve la liste des batiments qui augmente la joie
+				batimentJoie := batiment.GetBatimentJoyeux(abordables)
+				if len(batimentJoie) != 0 {
+					choix := batimentJoie[rand.Intn(len(batimentJoie))]
+					nbProjets++
+					budgetVille -= choix.Price
+					fmt.Println("[MAYOR]: Le maire demande la construction d'un", choix.Name)
+					batiment.EnConstruction <- choix
+				}
+			} else if !batiment.ProjetsGenereSante(projets) {
+				// On retrouve la liste des batiments qui augmente la sante
+				batimentSante := batiment.GetBatimentSante(abordables)
+				if len(batimentSante) != 0 {
+					fmt.Println("[DEBUG]: len(batimentSante)", len(batimentSante))
+					fmt.Println("[DEBUG]: batimentSante", batimentSante)
+					choix := batimentSante[rand.Intn(len(batimentSante))]
+					nbProjets++
+					budgetVille -= choix.Price
+					fmt.Println("[MAYOR]: Le maire demande la construction d'un", choix.Name)
+					batiment.EnConstruction <- choix
+				}
+			}
+		} else if tauxEmploiment > 0.90 && len(batiment.GetProjets()) == 0 {
+			// On choisit un batiment qui produit de l'argent dans la liste des batiments abordables
+			batimentBudget := batiment.GetBatimentBudget(abordables)
+			if len(batimentBudget) != 0 {
+				choix := batimentBudget[rand.Intn(len(batimentBudget))]
+				nbProjets++
+				budgetVille -= choix.Price
+				fmt.Println("[MAYOR]: Le maire demande la construction d'un", choix.Name)
+				batiment.EnConstruction <- choix
+			}
+		} else {
+			//On ne bati rien pour l'instant
+			fmt.Println("[MAYOR]: Le maire choisi de ne rien commander. Le budget, la joie et la sante sont assez haut.")
+		}
 	}
 
 	// Reset journalière à 0 des ressources secondaires
