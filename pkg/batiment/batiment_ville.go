@@ -42,8 +42,9 @@ func (batiments *BatimentVille) GetAll() []Batiment {
 
 // Trouve un emploi à un citoyen dans un batiment de la ville
 func (batiments *BatimentVille) Visite(id int) (Batiment, error) {
-
-	//Rempli les bâtiments en ordre de construction
+	batiments.batimentsVilleMutex.RLock()
+	defer batiments.batimentsVilleMutex.RUnlock()
+	// Rempli les bâtiments en ordre de construction
 	j := 0
 	for _, b := range batiments.batimentsVille {
 		for i := 0; i < b.Capacity; i++ {
@@ -54,16 +55,22 @@ func (batiments *BatimentVille) Visite(id int) (Batiment, error) {
 		j += b.Capacity
 	}
 
-	return Batiment{}, errors.New("Pas de batiment disponible")
+	return Batiment{}, errors.New("pas de batiment disponible")
 }
 
+// Met le nombre de Visitors pour chaque batiments de la ville à 0
 func (batiments *BatimentVille) ResetVisites() {
+	batiments.batimentsVilleMutex.Lock()
+	defer batiments.batimentsVilleMutex.Unlock()
 	for _, batiment := range batiments.batimentsVille {
 		batiment.Visitors = 0
 	}
 }
 
+// Retourne la somme des Capacités pour tous les bâtiments de la ville
 func (batiments *BatimentVille) CalculCapacitéEmploieVille() int {
+	batiments.batimentsVilleMutex.Lock()
+	defer batiments.batimentsVilleMutex.Unlock()
 	capacitéEmploieVille := 0
 	for _, b := range batiments.batimentsVille {
 		capacitéEmploieVille += b.Capacity
