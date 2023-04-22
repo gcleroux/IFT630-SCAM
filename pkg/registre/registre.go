@@ -1,10 +1,9 @@
-package batiment
+package registre
 
 import (
 	"errors"
 	"fmt"
 	"math"
-	"strconv"
 	"sync"
 
 	"github.com/gcleroux/IFT630-SCAM/pkg/batiment"
@@ -23,7 +22,7 @@ var idProjet int = 0
 var projets batiment.ProjetVille
 
 // On keep track de l'assignation des ouvriers
-var jobBoardVille batiment.JobBoard
+var jobBoardVille batiment.JobBoard = *batiment.NewJobBoard()
 
 // Le travail accompli par un travailleur dans une journée
 var workUnitPerDay int
@@ -44,7 +43,7 @@ func RegistreStep(wg *sync.WaitGroup, done <-chan interface{}) {
 		select {
 		case b := <-EnConstruction:
 			// On ajoute la demande du maire au projet en cours
-			projets.Append(batiment.Projet{idProjet, b, 0, 0})
+			projets.Append(batiment.Projet{Id: idProjet, Batiment: b, Travail: 0, Capacity: 0})
 			idProjet++
 		case t := <-JourneeTravail:
 			CheckWorkDone(t)
@@ -146,7 +145,7 @@ func DemandeTravail(idOuvrier int) (batiment.Projet, error) {
 	}
 
 	// On assigne un nouveau projet a l'ouvrier, s'il a un emploi de disponible
-	newProj, err := projets.FindWork(idOuvrier)
+	newProj, err := projets.FindWork(idOuvrier, workUnitPerDay)
 
 	if err != nil {
 		jobBoardVille.Delete(idOuvrier) // Retirer le projet associé à l'ouvrier s'il existe
@@ -190,14 +189,14 @@ func VisiteBatiment(id int) (batiment.Batiment, error) {
 	}
 
 	// Le citoyen visite un batiment
-	batiment, err := batimentsVille.Visite(id)
+	b, err := batimentsVille.Visite(id)
 
 	if err != nil {
 		return batiment.Batiment{}, err
 	}
 
 	// On retourne un batiment a visiter au hasard
-	return batiment, nil
+	return b, nil
 }
 
 // Retourne la liste des batiments de la ville
@@ -205,44 +204,24 @@ func GetBatiments() []batiment.Batiment {
 	return batimentsVille.GetAll()
 }
 
-func GetBatimentsList() []string {
-	listeBatiment := batimentsVille.GetAll()
-	var listeNomBatiment []string
-	for _, batiment := range listeBatiment {
-		listeNomBatiment = append(listeNomBatiment, batiment.Name)
-	}
-	return listeNomBatiment
+func GetBatimentsList() map[string]int {
+	return batimentsVille.GetBatimentsList()
 }
 
-func GetProjetsList() []string {
-	listeProjet := projets.GetAll()
-	var listeNomProjet []string
-	for _, proj := range listeProjet {
-		listeNomProjet = append(listeNomProjet, proj.Batiment.Name+strconv.Itoa(proj.Id))
-	}
-	return listeNomProjet
+func GetProjetsList() map[string]int {
+	return projets.GetProjetsList()
 }
 
 func GetProjets() []batiment.Projet {
 	return projets.GetAll()
 }
 
-func ProjetsGenereJoie(projets []batiment.Projet) bool {
-	for _, b := range projets {
-		if b.Batiment.GenerationJoie > 0 {
-			return true
-		}
-	}
-	return false
+func ProjetsGenereJoie() bool {
+	return projets.GenereJoie()
 }
 
-func ProjetsGenereSante(projets []batiment.Projet) bool {
-	for _, b := range projets {
-		if b.Batiment.GenerationSante > 0 {
-			return true
-		}
-	}
-	return false
+func ProjetsGenereSante() bool {
+	return projets.GenereSante()
 }
 
 func GetCapacitéEmploieVille() int {

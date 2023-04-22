@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gcleroux/IFT630-SCAM/pkg/batiment"
 	"github.com/gcleroux/IFT630-SCAM/pkg/people"
+	"github.com/gcleroux/IFT630-SCAM/pkg/registre"
 	"github.com/gcleroux/IFT630-SCAM/pkg/utils"
 )
 
@@ -26,7 +26,7 @@ func main() {
 	people.CitoyenInit(conf.NbCitoyen)
 
 	// Init du  Registre
-	batiment.RegisterInit(conf.TravailOuvrier)
+	registre.RegisterInit(conf.TravailOuvrier)
 
 	//Start le timer
 	start := time.Now()
@@ -56,8 +56,18 @@ func main() {
 
 		// Affichage de la journee
 		fmt.Printf("\nJour #%d\n=========\n", jour)
-		fmt.Println("Liste des batiments de la ville : ", batiment.GetBatimentsList())
-		fmt.Println("Liste des projets en cours : ", batiment.GetProjetsList())
+		if jour > 1 {
+			fmt.Print("Liste des batiments de la ville : ")
+			for batiment, count := range registre.GetBatimentsList() {
+				fmt.Print(batiment, "(", count, ") ")
+			}
+			fmt.Println()
+			fmt.Print("Liste des projets en cours : ")
+			for batiment, count := range registre.GetProjetsList() {
+				fmt.Print(batiment, "(", count, ") ")
+			}
+			fmt.Println()
+		}
 
 		// Un obtient le channel qui sera ferme a la fin d'une journee
 		// Les composantes qui sont dependants de la longueur d'une journee doivent
@@ -73,7 +83,7 @@ func main() {
 		// avec une methode Step() pour qu'il soit intégré au pipeline
 
 		wg.Add(1)
-		go batiment.RegistreStep(&wg, done)
+		go registre.RegistreStep(&wg, done)
 
 		wg.Add(1)
 		go people.MayorStep(&wg, done, tauxSante, tauxJoie, nbCitoyens)
@@ -190,13 +200,13 @@ func main() {
 
 	// Faire un cleanup des channels avec les fonctions MayorEnd, CitoyenEnd, etc.
 	people.MayorEnd()
-	batiment.RegistreEnd()
+	registre.RegistreEnd()
 
 	// Calcul du score
 	Score := 0
 	Score += nbCitoyens * 5
 	Score -= nbCitoyensPerdus * 10
-	Score += len(batiment.GetBatiments()) * 20
+	Score += len(registre.GetBatiments()) * 20
 	Score += int(totalJoie) / conf.NbJour
 	Score += int(totalSante) / conf.NbJour
 	Score += people.GetBudgetVille() / 100
@@ -210,12 +220,13 @@ func main() {
 	fmt.Println("Moyenne de joie: ", math.Round(totalJoie/float64(conf.NbJour)))
 	fmt.Println("Moyenne de sante: ", math.Round(totalSante/float64(conf.NbJour)))
 	fmt.Println("Budget restant: ", people.GetBudgetVille())
-	fmt.Println("Taux de citoyens par emploie: ", float64(nbCitoyens)/float64(batiment.GetCapacitéEmploieVille()))
-	fmt.Println("Nombre de bâtiments construits: ", len(batiment.GetBatiments()))
-	fmt.Println("Liste des batiments dans la ville:")
-	for _, b := range batiment.GetBatiments() {
-		fmt.Println(b)
+	fmt.Println("Taux de citoyens par emploie: ", float64(nbCitoyens)/float64(registre.GetCapacitéEmploieVille()))
+	fmt.Println("Nombre de bâtiments construits: ", len(registre.GetBatiments()))
+	fmt.Print("Liste des batiments de la ville : ")
+	for batiment, count := range registre.GetBatimentsList() {
+		fmt.Print(batiment, "(", count, ") ")
 	}
+	fmt.Println()
 	fmt.Println("Score: ", Score)
 
 	fmt.Println("\nTemps total d'exécution du programme:", time.Since(start))

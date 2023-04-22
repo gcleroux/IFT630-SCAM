@@ -34,6 +34,20 @@ func (batiments *BatimentVille) GetAll() []Batiment {
 	return batiments.batimentsVille
 }
 
+func (batiments *BatimentVille) GetBatimentsList() map[string]int {
+	batiments.batimentsVilleMutex.RLock()
+	defer batiments.batimentsVilleMutex.RUnlock()
+	batimentMap := make(map[string]int)
+	for _, b := range batiments.batimentsVille {
+		if batimentMap[b.Name] == 0 {
+			batimentMap[b.Name] = 1
+		} else {
+			batimentMap[b.Name]++
+		}
+	}
+	return batimentMap
+}
+
 // Trouve un emploi à un citoyen dans un batiment de la ville
 func (batiments *BatimentVille) Visite(id int) (Batiment, error) {
 	batiments.batimentsVilleMutex.RLock()

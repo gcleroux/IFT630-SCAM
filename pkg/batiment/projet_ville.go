@@ -73,8 +73,46 @@ func (projets *ProjetVille) GetAll() []Projet {
 	return projets.projetsVille
 }
 
+func (projets *ProjetVille) GetProjetsList() map[string]int {
+	projets.projetsVilleMutex.RLock()
+	defer projets.projetsVilleMutex.RUnlock()
+	projMap := make(map[string]int)
+	for _, proj := range projets.projetsVille {
+		if projMap[proj.Batiment.Name] == 0 {
+			projMap[proj.Batiment.Name] = 1
+		} else {
+			projMap[proj.Batiment.Name]++
+		}
+	}
+	return projMap
+}
+
+// Retourne vrai si un des projets peut générer de la joie
+func (projets *ProjetVille) GenereJoie() bool {
+	projets.projetsVilleMutex.RLock()
+	defer projets.projetsVilleMutex.RUnlock()
+	for _, proj := range projets.projetsVille {
+		if proj.Batiment.GenerationJoie > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// Retourne vrai si un des projets peut générer de la santé
+func (projets *ProjetVille) GenereSante() bool {
+	projets.projetsVilleMutex.RLock()
+	defer projets.projetsVilleMutex.RUnlock()
+	for _, proj := range projets.projetsVille {
+		if proj.Batiment.GenerationSante > 0 {
+			return true
+		}
+	}
+	return false
+}
+
 // Trouve et ajoute un travail au jobBoard pour un ouvrier, s'il n'y a pas de travail retourne un projet vide et une erreur
-func (projets *ProjetVille) FindWork(idOuvrier int) (Projet, error) {
+func (projets *ProjetVille) FindWork(idOuvrier int, work int) (Projet, error) {
 	projets.projetsVilleMutex.Lock()
 	defer projets.projetsVilleMutex.Unlock()
 
@@ -85,7 +123,7 @@ func (projets *ProjetVille) FindWork(idOuvrier int) (Projet, error) {
 			proj := projets.projetsVille[pIndex]
 
 			if proj.Capacity < proj.Batiment.WorkerCapacity {
-				dayWork := proj.Capacity * workUnitPerDay
+				dayWork := proj.Capacity * work
 				if proj.Travail+dayWork < proj.Batiment.Work {
 					proj.Capacity++
 					return proj, nil
@@ -94,7 +132,7 @@ func (projets *ProjetVille) FindWork(idOuvrier int) (Projet, error) {
 		}
 		for _, proj := range projets.projetsVille {
 			if proj.Capacity < proj.Batiment.WorkerCapacity {
-				dayWork := proj.Capacity * workUnitPerDay
+				dayWork := proj.Capacity * work
 				if proj.Travail+dayWork < proj.Batiment.Work {
 					proj.Capacity++
 					return proj, nil
