@@ -38,7 +38,7 @@ type Travail struct {
 }
 
 // Load les infos des batiments a partir des fichiers YAML
-func loadBatimentsInfos(prefix string) []Batiment {
+func LoadBatimentsInfos(prefix string) []Batiment {
 	// Liste vides des batiments
 	batiments := []Batiment{}
 
