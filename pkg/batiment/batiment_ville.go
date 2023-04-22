@@ -27,13 +27,6 @@ func (batiments *BatimentVille) Length() int {
 	return len(batiments.batimentsVille)
 }
 
-// Retourne le batiment à l'index du tableau
-func (batiments *BatimentVille) Get(index int) Batiment {
-	batiments.batimentsVilleMutex.RLock()
-	defer batiments.batimentsVilleMutex.RUnlock()
-	return batiments.batimentsVille[index]
-}
-
 // Retourne toute la liste des batiments
 func (batiments *BatimentVille) GetAll() []Batiment {
 	batiments.batimentsVilleMutex.RLock()
