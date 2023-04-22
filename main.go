@@ -223,6 +223,8 @@ func main() {
 			} else {
 				fmt.Println("Le taux de Joie dans la ville est à ", tauxJoie, "%. ", perte, " citoyens sont perdus.")
 			}
+		} else {
+			fmt.Println("Le taux de Joie dans la ville est à ", math.Round(tauxJoie), "%. ")
 		}
 		if tauxSante < 10 {
 			perte := rand.Intn(5) + 1 //2 à 5
@@ -238,6 +240,8 @@ func main() {
 			} else {
 				fmt.Println("Le taux de Sante dans la ville est à ", tauxSante, "%. ", perte, " citoyens sont perdus.")
 			}
+		} else {
+			fmt.Println("Le taux de Sante dans la ville est à ", math.Round(tauxSante), "%. ")
 		}
 	}
 
