@@ -45,11 +45,7 @@ func (batiments *BatimentVille) GetAll() []Batiment {
 func (batiments *BatimentVille) Visite() (Batiment, error) {
 	batiments.batimentsVilleMutex.Lock()
 	defer batiments.batimentsVilleMutex.Unlock()
-	//Temporary fix:
-	// rand.Seed(time.Now().UnixNano())
-	// return batiments.Get(rand.Intn(batiments.Length())), nil
-
-	//TODO: batiment.Visitors++ ne fonctionne pas. Le compteur reste à 1 est tous les citoyens vont travailler dans le même bâtiment.
+	// Trouver un batiment qui peut accueilir un citoyen et l'ajouter
 	for index, batiment := range batiments.batimentsVille {
 		if batiment.Visitors < batiment.Capacity {
 			batiments.batimentsVille[index].Visitors += 1
@@ -63,8 +59,7 @@ func (batiments *BatimentVille) ResetVisites() {
 	batiments.batimentsVilleMutex.Lock()
 	defer batiments.batimentsVilleMutex.Unlock()
 	// fmt.Println("Nombre de visiteur dans les batiments")
-	for index, _ := range batiments.batimentsVille {
-		// fmt.Print("Batiment :", batiment.Visitors, " | ")
+	for index := range batiments.batimentsVille {
 		batiments.batimentsVille[index].Visitors = 0
 	}
 }
