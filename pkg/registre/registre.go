@@ -1,34 +1,35 @@
-package batiment
+package registre
 
 import (
 	"errors"
 	"fmt"
 	"math"
-	"strconv"
 	"sync"
+
+	"github.com/gcleroux/IFT630-SCAM/pkg/batiment"
 )
 
 // Tous les batiments disponibles dans la simulation
-var TypesBatiments []Batiment = loadBatimentsInfos("./conf/batiments/")
+var TypesBatiments []batiment.Batiment = batiment.LoadBatimentsInfos("./conf/batiments/")
 
 // Batiments contenus dans la ville
-var batimentsVille BatimentVille = BatimentVille{batimentsVille: []Batiment{}}
+var batimentsVille batiment.BatimentVille
 
 // Tous les batiments activement en construction
 var idProjet int = 0
 
 // Les projets contenus dans la ville
-var projets ProjetVille = ProjetVille{projetsVille: []Projet{}}
+var projets batiment.ProjetVille
 
 // On keep track de l'assignation des ouvriers
-var jobBoardVille JobBoard = JobBoard{projetBoard: make(map[int]Projet)}
+var jobBoardVille batiment.JobBoard = *batiment.NewJobBoard()
 
 // Le travail accompli par un travailleur dans une journée
 var workUnitPerDay int
 
 // Channels
-var EnConstruction = make(chan Batiment)
-var JourneeTravail = make(chan Travail)
+var EnConstruction = make(chan batiment.Batiment)
+var JourneeTravail = make(chan batiment.Travail)
 
 func RegisterInit(workPerDay int) {
 	workUnitPerDay = workPerDay
@@ -42,13 +43,12 @@ func RegistreStep(wg *sync.WaitGroup, done <-chan interface{}) {
 		select {
 		case b := <-EnConstruction:
 			// On ajoute la demande du maire au projet en cours
-			projets.Append(Projet{idProjet, b, 0, 0})
+			projets.Append(batiment.Projet{Id: idProjet, Batiment: b, Travail: 0, Capacity: 0})
 			idProjet++
 		case t := <-JourneeTravail:
 			CheckWorkDone(t)
 		case <-done:
 			// La journee est terminee
-			batimentsVille.ResetVisites()
 			return
 		}
 	}
@@ -72,8 +72,8 @@ func TrouveBatimentMoinsCher() int {
 }
 
 // Retourne une liste des batiments qu'on peut se permettre selon un budget
-func GetBatimentsAbordables(budget int) []Batiment {
-	res := []Batiment{}
+func GetBatimentsAbordables(budget int) []batiment.Batiment {
+	res := []batiment.Batiment{}
 
 	for _, b := range TypesBatiments {
 		if b.Price <= budget {
@@ -84,8 +84,8 @@ func GetBatimentsAbordables(budget int) []Batiment {
 }
 
 // Retoune une liste des batiments qui génèrent de la joie
-func GetBatimentJoyeux(abordables []Batiment) []Batiment {
-	res := []Batiment{}
+func GetBatimentJoyeux(abordables []batiment.Batiment) []batiment.Batiment {
+	res := []batiment.Batiment{}
 
 	for _, b := range abordables {
 		if b.GenerationJoie > 0 {
@@ -96,8 +96,8 @@ func GetBatimentJoyeux(abordables []Batiment) []Batiment {
 }
 
 // Retoune une liste des batiments qui génèrent de la joie
-func GetBatimentSante(abordables []Batiment) []Batiment {
-	res := []Batiment{}
+func GetBatimentSante(abordables []batiment.Batiment) []batiment.Batiment {
+	res := []batiment.Batiment{}
 
 	for _, b := range abordables {
 		if b.GenerationSante > 0 {
@@ -108,8 +108,8 @@ func GetBatimentSante(abordables []Batiment) []Batiment {
 }
 
 // Retoune une liste des batiments qui génèrent de l'argent
-func GetBatimentBudget(abordables []Batiment) []Batiment {
-	res := []Batiment{}
+func GetBatimentBudget(abordables []batiment.Batiment) []batiment.Batiment {
+	res := []batiment.Batiment{}
 
 	for _, b := range abordables {
 		if b.Income > 0 {
@@ -120,21 +120,21 @@ func GetBatimentBudget(abordables []Batiment) []Batiment {
 }
 
 // Assigne un projet à un ouvrier, s'il n'est pas déjà sur un autre projet
-func DemandeTravail(idOuvrier int) (Projet, error) {
+func DemandeTravail(idOuvrier int) (batiment.Projet, error) {
 	if projets.Length() == 0 {
-		return Projet{}, errors.New("Pas de projet en cours")
+		return batiment.Projet{}, errors.New("Pas de projet en cours")
 	}
 
 	// On regarde si l'ouvrier est deja associe a un projet
 	if proj, ok := jobBoardVille.Get(idOuvrier); ok {
 		travailFait, err := projets.GetWorkDoneProjet(proj.Id)
 		if err != nil {
-			return Projet{}, err
+			return batiment.Projet{}, err
 		}
 
 		travailAFaire, err := projets.GetWorkProjet(proj.Id)
 		if err != nil {
-			return Projet{}, err
+			return batiment.Projet{}, err
 		}
 
 		// Vérifier si le projet est déjà terminé. Si non, l'ouvrier continue le projet
@@ -144,11 +144,11 @@ func DemandeTravail(idOuvrier int) (Projet, error) {
 	}
 
 	// On assigne un nouveau projet a l'ouvrier, s'il a un emploi de disponible
-	newProj, err := projets.FindWork(idOuvrier)
+	newProj, err := projets.FindWork(idOuvrier, workUnitPerDay)
 
 	if err != nil {
 		jobBoardVille.Delete(idOuvrier) // Retirer le projet associé à l'ouvrier s'il existe
-		return Projet{}, err
+		return batiment.Projet{}, err
 	}
 
 	jobBoardVille.Set(idOuvrier, newProj)
@@ -160,7 +160,7 @@ func DemandeTravail(idOuvrier int) (Projet, error) {
 //   - Ajoute le travail accompli durant la journée par les travailleurs
 //   - Si un projet est terminé, il est retirer des projets en cours et les projet associés au travailleur dans
 //     le jobBoard sont supprimés et ajoute dans les batiments de la ville.
-func CheckWorkDone(t Travail) {
+func CheckWorkDone(t batiment.Travail) {
 	//TODO: Maintenant qu'on a un jobBoard, on devrait plutot acceder au projet de cette facon
 	for idx, p := range projets.GetAll() {
 		if p.Id == t.Id {
@@ -181,66 +181,72 @@ func CheckWorkDone(t Travail) {
 	}
 }
 
-func VisiteBatiment(id int) (Batiment, error) {
-	batimentsLength := batimentsVille.Length()
-	if batimentsLength == 0 {
-		return Batiment{}, errors.New("Pas de batiment dans la ville")
+func VisiteBatiment() (batiment.Batiment, error) {
+	if batimentsVille.Length() == 0 {
+		return batiment.Batiment{}, errors.New("Pas de batiment dans la ville")
 	}
 
 	// Le citoyen visite un batiment
-	batiment, err := batimentsVille.Visite(id)
+	b, err := batimentsVille.Visite()
 
 	if err != nil {
-		return Batiment{}, err
+		return batiment.Batiment{}, err
 	}
 
 	// On retourne un batiment a visiter au hasard
-	return batiment, nil
+	return b, nil
+}
+
+// Met à 0 le compte des visiteurs de chaque batiment
+func ResetVisites() {
+	batimentsVille.ResetVisites()
 }
 
 // Retourne la liste des batiments de la ville
-func GetBatiments() []Batiment {
+func GetBatiments() []batiment.Batiment {
 	return batimentsVille.GetAll()
 }
 
-func GetBatimentsList() []string {
-	listeBatiment := batimentsVille.GetAll()
-	var listeNomBatiment []string
-	for _, batiment := range listeBatiment {
-		listeNomBatiment = append(listeNomBatiment, batiment.Name)
-	}
-	return listeNomBatiment
+func GetBatimentsList() map[string]int {
+	return batimentsVille.GetBatimentsList()
 }
 
-func GetProjetsList() []string {
-	listeProjet := projets.GetAll()
-	var listeNomProjet []string
-	for _, proj := range listeProjet {
-		listeNomProjet = append(listeNomProjet, proj.Batiment.Name+strconv.Itoa(proj.Id))
-	}
-	return listeNomProjet
+func GetProjetsList() map[string]int {
+	return projets.GetProjetsList()
 }
 
-func GetProjets() []Projet {
+func GetListeChantiers() (map[string]int, error) {
+	listeChantiers, err := projets.GetListeChantiers()
+	if err != nil {
+		return listeChantiers, err
+	}
+	return listeChantiers, nil
+}
+
+func GetListeVisites() (map[string]int, error) {
+	mapVisite := batimentsVille.GetListeVisites()
+	empty := true
+	for _, count := range mapVisite {
+		if count > 0 {
+			empty = false
+		}
+	}
+	if empty {
+		return map[string]int{}, errors.New("aucune visite durant la jounée")
+	}
+	return mapVisite, nil
+}
+
+func GetProjets() []batiment.Projet {
 	return projets.GetAll()
 }
 
-func ProjetsGenereJoie(projets []Projet) bool {
-	for _, b := range projets {
-		if b.Batiment.GenerationJoie > 0 {
-			return true
-		}
-	}
-	return false
+func ProjetsGenereJoie() bool {
+	return projets.GenereJoie()
 }
 
-func ProjetsGenereSante(projets []Projet) bool {
-	for _, b := range projets {
-		if b.Batiment.GenerationSante > 0 {
-			return true
-		}
-	}
-	return false
+func ProjetsGenereSante() bool {
+	return projets.GenereSante()
 }
 
 func GetCapacitéEmploieVille() int {

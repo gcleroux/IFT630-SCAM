@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gcleroux/IFT630-SCAM/pkg/batiment"
 	"github.com/gcleroux/IFT630-SCAM/pkg/people"
+	"github.com/gcleroux/IFT630-SCAM/pkg/registre"
 	"github.com/gcleroux/IFT630-SCAM/pkg/utils"
 )
 
@@ -26,7 +26,7 @@ func main() {
 	people.CitoyenInit(conf.NbCitoyen)
 
 	// Init du  Registre
-	batiment.RegisterInit(conf.TravailOuvrier)
+	registre.RegisterInit(conf.TravailOuvrier)
 
 	//Start le timer
 	start := time.Now()
@@ -56,10 +56,8 @@ func main() {
 
 		// Affichage de la journee
 		fmt.Printf("\nJour #%d\n=========\n", jour)
-		fmt.Println("Liste des batiments de la ville : ", batiment.GetBatimentsList())
-		fmt.Println("Liste des projets en cours : ", batiment.GetProjetsList())
 
-		// Un obtient le channel qui sera ferme a la fin d'une journee
+		// On obtient le channel qui sera ferme a la fin d'une journee
 		// Les composantes qui sont dependants de la longueur d'une journee doivent
 		// recevoir le channel en parametre
 		done := utils.DayTime(time.Duration(conf.DayTime) * time.Second)
@@ -73,7 +71,7 @@ func main() {
 		// avec une methode Step() pour qu'il soit intégré au pipeline
 
 		wg.Add(1)
-		go batiment.RegistreStep(&wg, done)
+		go registre.RegistreStep(&wg, done)
 
 		wg.Add(1)
 		go people.MayorStep(&wg, done, tauxSante, tauxJoie, nbCitoyens)
@@ -87,6 +85,62 @@ func main() {
 		for i := 0; i < nbCitoyens; i++ {
 			go people.CitoyenStep(&wg, i)
 		}
+
+		// On attend que tout le monde dans la ville termine sa journee
+		wg.Wait()
+
+		// Affichage de la liste des batiments et des projets
+		listeBatiments := registre.GetBatimentsList()
+		fmt.Print("Liste des batiments de la ville : ")
+		if len(listeBatiments) > 0 {
+			for batiment, count := range listeBatiments {
+				fmt.Print(batiment, "(", count, ") ")
+			}
+		} else {
+			fmt.Print("aucun batiment")
+		}
+		fmt.Println()
+		listeProjets := registre.GetProjetsList()
+		fmt.Print("Liste des projets en cours : ")
+		if len(listeProjets) > 0 {
+			for batiment, count := range listeProjets {
+				fmt.Print(batiment, "(", count, ") ")
+			}
+		} else {
+			fmt.Print("aucun projet en cours")
+		}
+		fmt.Println()
+
+		// Les visiteurs quittent les batiments
+		chantiers, err := registre.GetListeChantiers()
+		if err != nil {
+			fmt.Println("Ouvrier sur les chantiers : ", err)
+		} else {
+			fmt.Println("Ouvrier sur les chantiers : ")
+			for nomChantier, nbOuvrier := range chantiers {
+				if nbOuvrier == 1 {
+					fmt.Println(" - 1 ouvrier travaille sur le chantier : ", nomChantier)
+				} else if nbOuvrier > 1 {
+					fmt.Println(" - ", nbOuvrier, " ouvriers travaillent sur le chantier : ", nomChantier)
+				}
+			}
+		}
+
+		// Affichage du nombre de visites durant la journée
+		visites, err := registre.GetListeVisites()
+		if err != nil {
+			fmt.Println("Visites des citoyens :", err)
+		} else {
+			fmt.Println("Visites des citoyens : ")
+			for batiment, count := range visites {
+				if count == 1 {
+					fmt.Println(" - 1 citoyen a visité : ", batiment)
+				} else if count > 1 {
+					fmt.Println(" - ", count, " citoyens ont visités : ", batiment)
+				}
+			}
+		}
+		registre.ResetVisites()
 
 		nbNewCitoyen := 0
 		// De nouveaux ouvriers et citoyens sont potentiellement ajoutés
@@ -116,9 +170,7 @@ func main() {
 		} else if nbNewCitoyen == 1 {
 			fmt.Println("Un citoyen est né dans la métropole.")
 		}
-
-		// On attend que tout le monde dans la ville termine sa journee
-		wg.Wait()
+		fmt.Println("La ville contient une population de", nbCitoyens, "citoyens.")
 
 		// On additionne la joie et sante généré par les citoyens aujourd'hui
 		tauxJoie += float64(people.GetJoieJournaliere())
@@ -170,6 +222,8 @@ func main() {
 			} else {
 				fmt.Println("Le taux de Joie dans la ville est à ", tauxJoie, "%. ", perte, " citoyens sont perdus.")
 			}
+		} else {
+			fmt.Println("Le taux de Joie dans la ville est à ", math.Round(tauxJoie), "%. ")
 		}
 		if tauxSante < 10 {
 			perte := rand.Intn(5) + 1 //2 à 5
@@ -185,18 +239,20 @@ func main() {
 			} else {
 				fmt.Println("Le taux de Sante dans la ville est à ", tauxSante, "%. ", perte, " citoyens sont perdus.")
 			}
+		} else {
+			fmt.Println("Le taux de Sante dans la ville est à ", math.Round(tauxSante), "%. ")
 		}
 	}
 
 	// Faire un cleanup des channels avec les fonctions MayorEnd, CitoyenEnd, etc.
 	people.MayorEnd()
-	batiment.RegistreEnd()
+	registre.RegistreEnd()
 
 	// Calcul du score
 	Score := 0
 	Score += nbCitoyens * 5
 	Score -= nbCitoyensPerdus * 10
-	Score += len(batiment.GetBatiments()) * 20
+	Score += len(registre.GetBatiments()) * 20
 	Score += int(totalJoie) / conf.NbJour
 	Score += int(totalSante) / conf.NbJour
 	Score += people.GetBudgetVille() / 100
@@ -210,12 +266,13 @@ func main() {
 	fmt.Println("Moyenne de joie: ", math.Round(totalJoie/float64(conf.NbJour)))
 	fmt.Println("Moyenne de sante: ", math.Round(totalSante/float64(conf.NbJour)))
 	fmt.Println("Budget restant: ", people.GetBudgetVille())
-	fmt.Println("Taux de citoyens par emploie: ", float64(nbCitoyens)/float64(batiment.GetCapacitéEmploieVille()))
-	fmt.Println("Nombre de bâtiments construits: ", len(batiment.GetBatiments()))
-	fmt.Println("Liste des batiments dans la ville:")
-	for _, b := range batiment.GetBatiments() {
-		fmt.Println(b)
+	fmt.Println("Taux de citoyens par emploie: ", float64(nbCitoyens)/float64(registre.GetCapacitéEmploieVille()))
+	fmt.Println("Nombre de bâtiments construits: ", len(registre.GetBatiments()))
+	fmt.Print("Liste des batiments de la ville : ")
+	for batiment, count := range registre.GetBatimentsList() {
+		fmt.Print(batiment, "(", count, ") ")
 	}
+	fmt.Println()
 	fmt.Println("Score: ", Score)
 
 	fmt.Println("\nTemps total d'exécution du programme:", time.Since(start))

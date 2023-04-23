@@ -12,6 +12,10 @@ type JobBoard struct {
 	projetBoardMutex sync.RWMutex
 }
 
+func NewJobBoard() *JobBoard {
+	return &JobBoard{projetBoard: make(map[int]Projet)}
+}
+
 // Retourne le projet associé à l'index
 func (board *JobBoard) Get(idOuvrier int) (Projet, bool) {
 	board.projetBoardMutex.RLock()

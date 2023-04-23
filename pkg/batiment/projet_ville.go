@@ -3,6 +3,7 @@ package batiment
 import (
 	"errors"
 	"math/rand"
+	"strconv"
 	"sync"
 )
 
@@ -35,7 +36,7 @@ func (projets *ProjetVille) Length() int {
 	return len(projets.projetsVille)
 }
 
-// Retourne le travail accomplit sur un projet
+// Retourne la quantité de travail nécessaire pour compléter un projet
 func (projets *ProjetVille) GetWorkProjet(idProjet int) (int, error) {
 	projets.projetsVilleMutex.RLock()
 	defer projets.projetsVilleMutex.RUnlock()
@@ -70,11 +71,66 @@ func (projets *ProjetVille) Set(index int, proj Projet) {
 func (projets *ProjetVille) GetAll() []Projet {
 	projets.projetsVilleMutex.RLock()
 	defer projets.projetsVilleMutex.RUnlock()
-	return projets.projetsVille
+	listeProjets := projets.projetsVille
+	return listeProjets
+}
+
+func (projets *ProjetVille) GetProjetsList() map[string]int {
+	projets.projetsVilleMutex.RLock()
+	defer projets.projetsVilleMutex.RUnlock()
+	projMap := make(map[string]int)
+	for _, proj := range projets.projetsVille {
+		if projMap[proj.Batiment.Name] == 0 {
+			projMap[proj.Batiment.Name] = 1
+		} else {
+			projMap[proj.Batiment.Name]++
+		}
+	}
+	return projMap
+}
+
+// Retourne la liste des chantiers ainsi que le nombre d'ouvrier travaillant sur chacun d'entre eux
+func (projets *ProjetVille) GetListeChantiers() (map[string]int, error) {
+	projets.projetsVilleMutex.RLock()
+	defer projets.projetsVilleMutex.RUnlock()
+	listeProjet := make(map[string]int)
+	if len(projets.projetsVille) == 0 {
+		return map[string]int{}, errors.New("Aucun projet en cours")
+	}
+	for _, proj := range projets.projetsVille {
+		cle := proj.Batiment.Name + strconv.Itoa(proj.Id)
+		// fmt.Println("[DEBUG] Chantier ", cle, " = ", projets.projetsVille[index].Capacity)
+		listeProjet[cle] = proj.Capacity
+	}
+	return listeProjet, nil
+}
+
+// Retourne vrai si un des projets peut générer de la joie
+func (projets *ProjetVille) GenereJoie() bool {
+	projets.projetsVilleMutex.RLock()
+	defer projets.projetsVilleMutex.RUnlock()
+	for _, proj := range projets.projetsVille {
+		if proj.Batiment.GenerationJoie > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// Retourne vrai si un des projets peut générer de la santé
+func (projets *ProjetVille) GenereSante() bool {
+	projets.projetsVilleMutex.RLock()
+	defer projets.projetsVilleMutex.RUnlock()
+	for _, proj := range projets.projetsVille {
+		if proj.Batiment.GenerationSante > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 // Trouve et ajoute un travail au jobBoard pour un ouvrier, s'il n'y a pas de travail retourne un projet vide et une erreur
-func (projets *ProjetVille) FindWork(idOuvrier int) (Projet, error) {
+func (projets *ProjetVille) FindWork(idOuvrier int, work int) (Projet, error) {
 	projets.projetsVilleMutex.Lock()
 	defer projets.projetsVilleMutex.Unlock()
 
@@ -85,18 +141,18 @@ func (projets *ProjetVille) FindWork(idOuvrier int) (Projet, error) {
 			proj := projets.projetsVille[pIndex]
 
 			if proj.Capacity < proj.Batiment.WorkerCapacity {
-				dayWork := proj.Capacity * workUnitPerDay
+				dayWork := proj.Capacity * work
 				if proj.Travail+dayWork < proj.Batiment.Work {
-					proj.Capacity++
+					projets.projetsVille[pIndex].Capacity++
 					return proj, nil
 				}
 			}
 		}
-		for _, proj := range projets.projetsVille {
+		for index, proj := range projets.projetsVille {
 			if proj.Capacity < proj.Batiment.WorkerCapacity {
-				dayWork := proj.Capacity * workUnitPerDay
+				dayWork := proj.Capacity * work
 				if proj.Travail+dayWork < proj.Batiment.Work {
-					proj.Capacity++
+					projets.projetsVille[index].Capacity++
 					return proj, nil
 				}
 			}
