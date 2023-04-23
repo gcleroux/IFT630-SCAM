@@ -140,9 +140,7 @@ func main() {
 				}
 			}
 		}
-
-		// Affichage du nombre d'ouvrier dans chaque projet
-		// chantiers := registre.GetListeChantiers()
+		registre.ResetVisites()
 
 		nbNewCitoyen := 0
 		// De nouveaux ouvriers et citoyens sont potentiellement ajoutés
@@ -172,6 +170,7 @@ func main() {
 		} else if nbNewCitoyen == 1 {
 			fmt.Println("Un citoyen est né dans la métropole.")
 		}
+		fmt.Println("La ville contient une population de", nbCitoyens, "citoyens.")
 
 		// On additionne la joie et sante généré par les citoyens aujourd'hui
 		tauxJoie += float64(people.GetJoieJournaliere())
