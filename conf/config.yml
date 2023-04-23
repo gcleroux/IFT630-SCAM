@@ -1,4 +1,9 @@
 ---
 budget: 2000
 nbOuvriers: 3
-nbCitoyens: 1000
+travailOuvriers: 5
+nbCitoyens: 5
+nbJours: 120
+dayTime: 1
+tauxRecrutementOuvrier: 10
+tauxNaissance: 50

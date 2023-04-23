@@ -1,0 +1,10 @@
+---
+id: 1
+name: "Parc"
+price: 250
+work: 20
+capacity: 15
+workercapacity: 2
+income: 0
+generationjoie: 0.2
+generationsante: 0.11

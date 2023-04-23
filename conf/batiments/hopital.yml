@@ -1,0 +1,10 @@
+---
+id: 2
+name: "Hopital"
+price: 500
+work: 50
+capacity: 15
+workercapacity: 10
+income: 0
+generationjoie: -0.2
+generationsante: 0.5
